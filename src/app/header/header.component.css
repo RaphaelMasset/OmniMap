@@ -1,0 +1,65 @@
+* {
+    
+    border: 1px solid rgba(204, 204, 204, 0.7);
+}
+
+header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    padding: 2px 1px;   /* Inside padding: 16px top/bottom, 24px left/right */
+    margin: 2px 1px;       /* Outside margin: 20px top/bottom, 0 left/right */
+
+}
+
+h1 {
+    padding: 1px;   /* Inside padding: 16px top/bottom, 24px left/right */
+    margin: 1px 5px 1px 1px;
+    flex: 1; 
+    text-align: left;
+    font-size: clamp(20px, 2vw, 35px);
+}
+
+h2 {
+    padding: 1px;   /* Inside padding: 16px top/bottom, 24px left/right */
+    margin: 1px;
+    flex: 2; 
+    text-align: right;
+    font-size: clamp(15px, 2vw, 30px);
+    white-space: nowrap;        /* Prevent line breaks */
+    overflow: hidden;           /* Hide overflow */
+    text-overflow: ellipsis;    /* Show ellipsis (...) when text overflows */
+}
+h3 {
+    padding: 1px;   /* Inside padding: 16px top/bottom, 24px left/right */
+    margin: 1px;
+    flex: 5; 
+    text-align: left;
+    font-size: clamp(10px, 2vw, 25px);
+}
+img {
+    padding: 1px;
+    margin: 1px;
+    width: clamp(30px, 2vw, 40px);;
+    height: clamp(30px, 2vw, 40px);;
+    object-fit: contain; /* Keeps aspect ratio while fitting within 40x40 */
+    
+
+}
+
+button
+{
+    background-color: #ffffff;
+    padding: 0px;
+    margin: 1px;
+    
+}
+button:hover img {
+  transform: scale(1.05);
+}
+button:active img {
+  background-color: #004085;
+}

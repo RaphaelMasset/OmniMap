@@ -1,6 +1,8 @@
 # OmniMap
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.3.
+OmniMap is a web application built using Angular, designed to provide an interactive mapping experience with rich note and node management features.
+
+This project was generated using Angular CLI version 20.3.3.
 
 ## Development server
 
