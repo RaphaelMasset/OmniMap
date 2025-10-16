@@ -1,4 +1,9 @@
-
-<ul id="list-of-nodes">
-    <li><map-node/></li>
+<ul id="list-of-nodes" #parentContainer>
+    <li *ngFor="let node of nodes">
+        <app-node 
+            [node]="node"
+            [parentCoords]="parentCoords" 
+            (sendParendOfNewNode)="addChildNode($event)">
+        </app-node>
+    </li>
 </ul>

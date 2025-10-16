@@ -8,7 +8,7 @@ import { Map } from './map/map.component';
 // the component decorator receive an object {}
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderComponent, Map],  //list of the component i want to use in the maint comp
+  imports: [HeaderComponent, Map],  //list of the component i want to use in the maint comp
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

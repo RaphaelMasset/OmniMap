@@ -1,28 +1,40 @@
 .node-container {
   display: flex;
   flex-direction: column;
+  margin: 2px;
   padding: 5px;
   box-sizing: border-box;
   width: 200px;
-  height: 200px;
   border-radius: 3px;
-  border: 2px solid #007bff;
+  border: 0px;
+  background-color: #007bff;
+  position: absolute;
 }
 
 .node-container input,
 .node-container textarea {
   width: 100%;
   box-sizing: border-box;
-  padding: 5px;
-  margin-bottom: 5px;
-  border: 1px solid #007bff;
+  padding: 2px;
+  margin: 2px 0px 0px 0px;
+  background-color: rgba(255, 255, 255, 0.9);
   border-radius: 3px;
+  border: 0px;
   resize: none; /* disable resizing */
 }
 
+.node-container input:focus,
+.node-container textarea:focus {
+  outline: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.node-container input{
+  text-align: center;
+}
 .node-container textarea {
   flex-grow: 1; /* fill remaining vertical space */
   margin-bottom: 0; /* remove bottom margin on last element */
+  max-height: 1000px;
 }
 
 .hidden {
@@ -52,3 +64,4 @@
 .context-menu li:hover {
   background-color: #eee;
 }
+

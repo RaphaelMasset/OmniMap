@@ -10,8 +10,9 @@ header {
     height: auto;
     border-top: 1px solid #ccc;
     border-bottom: 1px solid #ccc;
-    padding: 2px 1px;   /* Inside padding: 16px top/bottom, 24px left/right */
-    margin: 2px 1px;       /* Outside margin: 20px top/bottom, 0 left/right */
+    padding: 1px;   /* Inside padding: 16px top/bottom, 24px left/right */
+    margin: 1px;       /* Outside margin: 20px top/bottom, 0 left/right */
+
 
 }
 
