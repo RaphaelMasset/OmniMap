@@ -1,39 +1,42 @@
 <!-- node.html -->
 <div 
+  #nodeContainer
   class="node-container" 
   (contextmenu)="onRightClickComponent($event)"
   [style.border-color]="node.color"
   [style.background-color]="node.color"
-  cdkDrag
-  [cdkDragFreeDragPosition]="{x: node.x, y: node.y}"
-  (cdkDragStarted)="onDragStarted()"
-  (cdkDragEnded)="onDragEnded($event)">
+  
+  (mousedown)="onMouseDown($event)"
+  [style.position]="'absolute'"
+  [style.left.px]="node.x"
+  [style.top.px]="node.y"
+  >
   
   <input 
     type="text" 
     placeholder="Title"  
     class="node-title-input"
     [value]="title"
-    
+    (mousedown)="null"
     (blur)="updateTitle($event)">
-
+  <!--div> {{ node.x +','+ node.y}}</div-->
   <textarea 
     #textArea
     *ngIf="!nodeMinimised"
     placeholder="Input your notes here"
     class="node-text-input"
    
-    (input)="updateTextArea($event)">{{ node.text }}</textarea>
+    (input)="updateTextArea($event)"></textarea>
 
   <div 
     *ngIf="menuVisible" 
     #menu
-    [ngStyle]="{ top: menuY + 'px', left: menuX + 'px' }" 
+    [style.left.px]="menuX"
+    [style.top.px]="menuY"
     class="context-menu">
       <ul>
         <li (click)="onMenuAction('newNode')">New child node</li>
-        <li>Set color:</li>
-        <li>
+        <li>Set color:
           <input type="color"
                 class="color-picker"
                 (input)="onColorChange($event)"
@@ -41,7 +44,7 @@
         </li>
         <li (click)="onMenuAction('MinMaximiseNode')">{{ nodeMinimised ? 'Maximise' : 'Minimise' }}</li>
         <li (click)="onMenuAction('delete')">Delete</li>
-        <li>{{ menuY + 'px / ' + menuX + 'px' }}</li>
+        <!--li>{{ menuY + 'px / ' + menuX + 'px' }}</li-->
       </ul>
   </div>
 

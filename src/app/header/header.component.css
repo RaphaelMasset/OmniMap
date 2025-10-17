@@ -1,66 +1,90 @@
 * {
-    
-    border: 1px solid rgba(204, 204, 204, 0.7);
+  z-index: 1;
 }
 
 header {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    height: auto;
-    border-top: 1px solid #ccc;
-    border-bottom: 1px solid #ccc;
-    padding: 1px;   /* Inside padding: 16px top/bottom, 24px left/right */
-    margin: 1px;       /* Outside margin: 20px top/bottom, 0 left/right */
-
-
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  padding: 1px;
+  margin: 1px;
 }
 
 h1 {
-    padding: 1px;   /* Inside padding: 16px top/bottom, 24px left/right */
-    margin: 1px 5px 1px 1px;
-    flex: 1; 
-    text-align: left;
-    font-size: clamp(20px, 2vw, 35px);
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  text-align: left;
+  font-size: clamp(20px, 2vw, 35px);
 }
 
 h2 {
-    padding: 1px;   /* Inside padding: 16px top/bottom, 24px left/right */
-    margin: 1px;
-    flex: 2; 
-    text-align: right;
-    font-size: clamp(15px, 2vw, 30px);
-    white-space: nowrap;        /* Prevent line breaks */
-    overflow: hidden;           /* Hide overflow */
-    text-overflow: ellipsis;    /* Show ellipsis (...) when text overflows */
+  padding: 1px;
+  margin: 1px;
+  flex: 2;
+  text-align: right;
+  font-size: clamp(15px, 2vw, 30px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
 h3 {
-    padding: 1px;   /* Inside padding: 16px top/bottom, 24px left/right */
-    margin: 1px;
-    flex: 5; 
-    text-align: left;
-    font-size: clamp(10px, 2vw, 25px);
+  padding: 1px;
+  margin: 1px;
+  flex: 5;
+  text-align: left;
+  font-size: clamp(10px, 2vw, 25px);
 }
+
 img {
-    padding: 1px;
-    margin: 1px;
-    width: clamp(30px, 2vw, 40px);;
-    height: clamp(30px, 2vw, 40px);;
-    object-fit: contain; /* Keeps aspect ratio while fitting within 40x40 */
-    
-
+  width: clamp(30px, 2vw, 40px);
+  height: clamp(30px, 2vw, 40px);
+  object-fit: contain;
+  transition: transform 0.2s ease;
+  transform-origin: center center;
+  margin: 1px;
+  padding: 1px;
 }
 
-button
-{
-    background-color: #ffffff;
-    padding: 0px;
-    margin: 1px;
-    
+button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  margin: 1px 5px;
+  background-color: #fff;
+  border: 2px solid transparent; /* reserve border space */
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
+
+button:hover,
 button:hover img {
-  transform: scale(1.05);
+  transform: scale(1.07);
 }
+
+button:hover {
+  border-color: rgb(143, 143, 143);
+}
+
+button:active {
+  border-color: rgb(143, 143, 143);
+  transition: none; /* disable transitions on click */
+  transform: scale(1);
+}
+
 button:active img {
-  background-color: #004085;
+  transform: scale(1);
+  background-color: transparent;
+  box-shadow: none;
+}
+
+button:focus {
+  outline: none;
+  box-shadow: none;
 }

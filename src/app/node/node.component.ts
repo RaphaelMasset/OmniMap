@@ -1,25 +1,26 @@
 import { Component, ElementRef, HostListener, ViewChild, Input, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NodeDataModel } from '../models/node-data.model';
-import { DragDropModule } from '@angular/cdk/drag-drop';
-import { CdkDragEnd } from '@angular/cdk/drag-drop';
+//import { DragDropModule,CdkDragEnd,CdkDragMove } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-node',
   standalone: true,
-  imports: [CommonModule,DragDropModule],
+  imports: [CommonModule],
   templateUrl: './node.component.html',
   styleUrls: ['./node.component.scss']
 })
 export class Node {
 
   @Input() node!: NodeDataModel;
-  @Input() parentCoords!: { x: number, y: number };
+  @Input() mapContainerCoordXY!: { x: number, y: number };
+  @Output() nodeMoved = new EventEmitter<{ id: number, x: number, y: number }>();
 
   @Output() sendParendOfNewNode = new EventEmitter<NodeDataModel>();
   @ViewChild('textArea') textArea!: ElementRef;
   //look in template for an element with the template reference variable named #menu.
   @ViewChild('menu') menuElement!: ElementRef;
+  @ViewChild('nodeContainer') nodeContainer!: ElementRef;
 
   nodeMinimised = false;
   menuVisible = false;
@@ -55,41 +56,25 @@ export class Node {
 
   onRightClickComponent(event: MouseEvent) {
     event.preventDefault();  // Prevent the browser default context menu
-    event.stopPropagation(); // Prevent onRightClickDocument() to get the event if it come from the component
-
-    //event.clientX // Y are Absolute coordinate of the click relatively to the viewport
-    console.log('abs click XY'+' x: '+event.clientX+', y: '+event.clientY)
-
-    //const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    //event.clientX // Y are Absolute coordinate of the element i click on relatively to the viewport
-    //console.log('onRightClickComponent'+' x: '+rect.left+', y: '+rect.top)
-  
-    this.menuX = event.clientX-this.parentCoords.x-this.node.x;
-    this.menuY = event.clientY-this.parentCoords.y-this.node.y;
-    console.log('parent comp XY'+' x: '+this.parentCoords.x +', y: '+this.parentCoords.y)
-    console.log('calc meny XY'+' x: '+this.menuX+', y: '+this.menuY)
-    
+   // event.stopPropagation(); // Prevent onRightClickDocument() to get the event if it come from the component
+    this.menuX = event.clientX;
+    this.menuY = event.clientY;
     this.menuVisible = true;
-
   }
 
   onColorChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.node.color = input.value; // Save chosen color to the node model
-    console.log('Color changed:', this.node.color);
   }
 
   onMenuAction(action: string) {
-    //console.log('Action chosen:', action, 'for', this.node);
     this.menuVisible = false; // close menu on action
-    //console.log('onMenuAction-Mvisibility:' + this.menuVisible)
 
     switch (action) 
     {
       case 'newNode':
         // Handle creating a new child node
         this.sendParendOfNewNode.emit(this.node);
-        //console.log('event sent')
         break;
 
       case 'child':
@@ -122,45 +107,47 @@ export class Node {
   //fort he left click
   @HostListener('document:click', ['$event'])
   onLeftClickDocument(event: MouseEvent) {
-    // Close menu only if clicked outside the menu itself
-    const clickedInsideMenu = this.menuElement?.nativeElement.contains(event.target);
-    //console.log('onLeftClickDocument-Mvisibility :' + this.menuVisible)
-    if (!clickedInsideMenu && this.menuVisible == true) {    
-      this.menuVisible = false;
-      //console.log('onLeftClickDocument-Mvisibility :' + this.menuVisible + ' IF')
-    }
+    this.onRightClickDocument(event)
   }
   
   @HostListener('document:contextmenu', ['$event'])
   onRightClickDocument(event: MouseEvent) {
     const clickedInsideMenu = this.menuElement?.nativeElement.contains(event.target);
-    //console.log('onRightClickDocument-Mvisibility :' + this.menuVisible)
-    if (!clickedInsideMenu && this.menuVisible == true) {
-     // console.log('Right clicked outside menu')
+    const clickedInsideNode = this.nodeContainer?.nativeElement.contains(event.target);
+    if (!clickedInsideMenu && !clickedInsideNode && this.menuVisible == true) {
       this.menuVisible = false;
-      //console.log('onRightClickDocument-Mvisibility :' + this.menuVisible + 'IF')
     }
   }
-  onDragStarted() {
-    console.log('Drag started');
+  
+  private dragging = false;
+  private lastX = 0;
+  private lastY = 0;
+
+  onMouseDown(event: MouseEvent) {
+    const clickedElement = event.target as HTMLElement;
+    if (clickedElement.tagName === 'INPUT' || clickedElement.tagName === 'TEXTAREA'){return}
+    this.dragging = true;
+    this.lastX = event.clientX;
+    this.lastY = event.clientY;
+    window.addEventListener('mousemove', this.onMouseMove);
+    window.addEventListener('mouseup', this.onMouseUp);
   }
 
-  onDragEnded(event: CdkDragEnd) {
-    const position = event.source.getFreeDragPosition();
-    //console.log('Drag ended at', position);
-    console.log('onDragEnded'+' x: '+position.x+', y: '+position.y)
-    
-    this.node.x = position.x;
-    this.node.y = position.y;
-    // Use position.x and position.y if needed
-  }
+  onMouseMove = (event: MouseEvent) => {
+    if (!this.dragging) return;
+    const dx = event.clientX - this.lastX;
+    const dy = event.clientY - this.lastY;
+    this.node.x += dx;
+    this.node.y += dy;
+    this.lastX = event.clientX;
+    this.lastY = event.clientY;
+    this.nodeMoved.emit({ id: this.node.id, x: this.node.x, y: this.node.y });
+  };
 
-  getRGBA(hex: string, alpha: number): string {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    console.log(`rgba(${r}, ${g}, ${b}, ${alpha})`)
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  }
-  tg(){return }
+  onMouseUp = (event: MouseEvent) => {
+    this.dragging = false;
+    window.removeEventListener('mousemove', this.onMouseMove);
+    window.removeEventListener('mouseup', this.onMouseUp);
+  };
+ 
 }

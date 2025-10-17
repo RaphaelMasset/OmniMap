@@ -1,5 +1,11 @@
-ul {
+map-of-nodes {
   list-style-type: none;
+  position: relative;
   padding: 0;   /* optional: removes default padding */
   margin: 0;    /* optional: removes default margin */
+}
+
+svg {
+  width: 10000000px;
+  height: 10000000px; /* ou une hauteur fixe */
 }
