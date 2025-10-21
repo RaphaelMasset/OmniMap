@@ -2,7 +2,6 @@
 <div 
   #nodeContainer
   class="node-container" 
-  (contextmenu)="onRightClickComponent($event)"
   [style.border-color]="node.color"
   [style.background-color]="node.color"
   
@@ -10,6 +9,8 @@
   [style.position]="'absolute'"
   [style.left.px]="node.x"
   [style.top.px]="node.y"
+  [style.width.px]="node.width"
+  [style.height.px]="node.height"
   >
   
   <input 
@@ -19,33 +20,35 @@
     [value]="title"
     (mousedown)="null"
     (blur)="updateTitle($event)">
-  <!--div> {{ node.x +','+ node.y}}</div-->
-  <textarea 
-    #textArea
-    *ngIf="!nodeMinimised"
-    placeholder="Input your notes here"
-    class="node-text-input"
-   
-    (input)="updateTextArea($event)"></textarea>
-
-  <div 
-    *ngIf="menuVisible" 
-    #menu
-    [style.left.px]="menuX"
-    [style.top.px]="menuY"
-    class="context-menu">
-      <ul>
-        <li (click)="onMenuAction('newNode')">New child node</li>
-        <li>Set color:
-          <input type="color"
-                class="color-picker"
-                (input)="onColorChange($event)"
-                [value]="node.color || '#007bff'">
-        </li>
-        <li (click)="onMenuAction('MinMaximiseNode')">{{ nodeMinimised ? 'Maximise' : 'Minimise' }}</li>
-        <li (click)="onMenuAction('delete')">Delete</li>
-        <!--li>{{ menuY + 'px / ' + menuX + 'px' }}</li-->
-      </ul>
-  </div>
+  @if(!nodeMinimised)
+  {
+    <textarea 
+      #textArea
+      placeholder="Input your notes here"
+      class="node-text-input" 
+      (input)="updateTextArea($event)"></textarea>
+  }
+  @if(menuVisible)
+  {
+    <div 
+      #menu
+      [style.left.px]="menuX"
+      [style.top.px]="menuY"
+      class="context-menu">
+        <ul>
+          <li (click)="onMenuAction('newNode',$event)">New child node</li>
+          <li>Set color:
+            <input 
+              #colorPicker  
+              type="color"
+              class="color-picker"
+              (input)="onMenuAction('color',$event)"
+              [value]="node.color || '#007bff'">
+          </li>
+          <li (click)="onMenuAction('MinMaximiseNode',$event)">{{ nodeMinimised ? 'Maximise' : 'Minimise' }}</li>
+          <li (click)="onMenuAction('delete',$event)">Delete</li>
+        </ul>
+    </div>
+  }
 
 </div>

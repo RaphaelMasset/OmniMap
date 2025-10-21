@@ -11,5 +11,13 @@ import { Component } from '@angular/core'
 
 })
 export class HeaderComponent{
+    lastClickedNodeTitle : String = '';
+
+    constructor() {
+        window.addEventListener('nodeClicked', (event: any) => {
+            this.lastClickedNodeTitle = event.detail;
+            console.log('received')
+        });
+    }
 
 }

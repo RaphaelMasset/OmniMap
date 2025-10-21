@@ -1,6 +1,5 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { HeaderComponent } from './header/header.component';
 import { MapComponent } from './map/map.component';
 
 
@@ -8,7 +7,7 @@ import { MapComponent } from './map/map.component';
 // the component decorator receive an object {}
 @Component({
   selector: 'app-root',
-  imports: [HeaderComponent, MapComponent],  //list of the component i want to use in the maint comp
+  imports: [MapComponent],  //list of the component i want to use in the maint comp
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

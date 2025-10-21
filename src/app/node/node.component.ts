@@ -13,19 +13,23 @@ import { NodeDataModel } from '../models/node-data.model';
 export class Node {
 
   @Input() node!: NodeDataModel;
-  @Input() mapContainerCoordXY!: { x: number, y: number };
-  @Output() nodeMoved = new EventEmitter<{ id: number, x: number, y: number }>();
 
-  @Output() sendParendOfNewNode = new EventEmitter<NodeDataModel>();
+  @Output() currentNodeIdForNewChildNode = new EventEmitter<number>();
+
   @ViewChild('textArea') textArea!: ElementRef;
-  //look in template for an element with the template reference variable named #menu.
   @ViewChild('menu') menuElement!: ElementRef;
   @ViewChild('nodeContainer') nodeContainer!: ElementRef;
+  @ViewChild('colorPicker') colorPicker!: ElementRef;
+
 
   nodeMinimised = false;
   menuVisible = false;
   menuX = 0;
   menuY = 0;
+
+  private dragging = false;
+  private lastX = 0;
+  private lastY = 0;
 
   maxHeightTextArea = 1000;
 
@@ -54,49 +58,37 @@ export class Node {
     this.nodeMinimised ? null : this.adjustTextAreaHeight();
   }
 
-  onRightClickComponent(event: MouseEvent) {
-    event.preventDefault();  // Prevent the browser default context menu
-   // event.stopPropagation(); // Prevent onRightClickDocument() to get the event if it come from the component
-    this.menuX = event.clientX;
-    this.menuY = event.clientY;
-    this.menuVisible = true;
-  }
 
-  onColorChange(event: Event) {
+
+  onMenuAction(action: string, event: Event) {
+     // close menu on action
     const input = event.target as HTMLInputElement;
-    this.node.color = input.value; // Save chosen color to the node model
-  }
-
-  onMenuAction(action: string) {
-    this.menuVisible = false; // close menu on action
-
     switch (action) 
     {
       case 'newNode':
         // Handle creating a new child node
-        this.sendParendOfNewNode.emit(this.node);
+        this.currentNodeIdForNewChildNode.emit(this.node.id);
+        this.menuVisible = false;
         break;
 
-      case 'child':
-        // Handle setting color
-      // this.setColorForNode();
+      case 'color':
+        this.node.color = input.value;
         break;
 
       case 'MinMaximiseNode':
         this.nodeMinimised = !this.nodeMinimised;
 
-        //il faut mettre a jour le DOM plus tard sinon 
-        //@ViewChild('textArea') ne retorune pas une valeur a jour
+
         if (!this.nodeMinimised) {
           setTimeout(() => {
             this.adjustTextAreaHeight();
           });
-        }// Adrien // Luc // 
+        }
+        this.menuVisible = false;
         break;
 
       case 'delete':
-        // Handle deleting the node
-        //this.deleteNode();
+        this.menuVisible = false;
         break;
 
       default:
@@ -105,25 +97,48 @@ export class Node {
   }
 
   //fort he left click
-  @HostListener('document:click', ['$event'])
+  @HostListener('document:mousedown', ['$event'])
   onLeftClickDocument(event: MouseEvent) {
-    this.onRightClickDocument(event)
+    this.closeMenuIfOut(event)
+    if(event.button == 2)
+    {
+      //cant prevent default context menu here because contextmenu event will be fired after
+
+    }  
   }
-  
+
   @HostListener('document:contextmenu', ['$event'])
   onRightClickDocument(event: MouseEvent) {
-    const clickedInsideMenu = this.menuElement?.nativeElement.contains(event.target);
     const clickedInsideNode = this.nodeContainer?.nativeElement.contains(event.target);
-    if (!clickedInsideMenu && !clickedInsideNode && this.menuVisible == true) {
+    this.closeMenuIfOut(event)
+
+    //if the right click is inside the node prevent default and display menu
+    if (clickedInsideNode)
+    {
+      event.preventDefault();  // Prevent the browser default context menu
+      // event.stopPropagation(); 
+      this.menuX = event.clientX;
+      this.menuY = event.clientY;
+      this.menuVisible = true;
+
+    }
+  }
+
+  closeMenuIfOut(event:Event)
+  {
+    const clickedInsideMenu = this.menuElement?.nativeElement.contains(event.target); 
+    const clickedInsideColorPicker = this.colorPicker?.nativeElement.contains(event.target);
+
+    if (!clickedInsideMenu && !clickedInsideColorPicker && this.menuVisible == true) 
+    {
+      console.log(`close menu bc it was open? ${this.menuVisible} and clicked on; Menu: ${clickedInsideMenu} ColorPicker: ${clickedInsideColorPicker}` )
       this.menuVisible = false;
     }
   }
-  
-  private dragging = false;
-  private lastX = 0;
-  private lastY = 0;
+
 
   onMouseDown(event: MouseEvent) {
+    window.dispatchEvent(new CustomEvent('nodeClicked', { detail: this.node.title }));
     const clickedElement = event.target as HTMLElement;
     if (clickedElement.tagName === 'INPUT' || clickedElement.tagName === 'TEXTAREA'){return}
     this.dragging = true;
@@ -135,13 +150,15 @@ export class Node {
 
   onMouseMove = (event: MouseEvent) => {
     if (!this.dragging) return;
+    const rect = this.nodeContainer.nativeElement.getBoundingClientRect();
     const dx = event.clientX - this.lastX;
     const dy = event.clientY - this.lastY;
     this.node.x += dx;
     this.node.y += dy;
     this.lastX = event.clientX;
     this.lastY = event.clientY;
-    this.nodeMoved.emit({ id: this.node.id, x: this.node.x, y: this.node.y });
+    this.node.width = rect.width;
+    this.node.height = rect.height;
   };
 
   onMouseUp = (event: MouseEvent) => {

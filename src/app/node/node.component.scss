@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  max-width: 600px;
   border-radius: 3px;
   
   margin: 0px;
@@ -38,7 +37,6 @@
 .node-container textarea {
   flex-grow: 1; /* fill remaining vertical space */
   margin-bottom: 0; /* remove bottom margin on last element */
-  max-height: 1000px;
 }
 
 .hidden {
