@@ -3,6 +3,8 @@ import { CommonModule, NgFor} from  '@angular/common';
 import { Node } from '../node/node.component';
 import { NodeDataModel } from '../models/node-data.model';
 import { HeaderComponent } from '../header/header.component';
+import { Line } from './Line';
+
 
 @Component({
   selector: 'app-map',
@@ -15,7 +17,15 @@ export class MapComponent implements AfterViewInit {
   nodesMap: Map<number, NodeDataModel> = new Map();
   mapContainerCoordXY = { x: 0, y: 0 };
   defaultNodeDim = { w: 100, h: 100 };
-  numbers = Array.from({ length: 100 }, (_, i) => i);
+  //numbers = Array.from({ length: 100 }, (_, i) => i); //to create a background grid
+  iterationBezier = Array.from({ length: 8 }, (_, i) => i);
+
+  ratios = [
+    { rx: 0.1, ry: 0.1 },
+    { rx: 0.2, ry: 0.05 },
+    { rx: 0.8, ry: 0.05 },
+    { rx: 0.9, ry: 0.1 },
+  ];
 
   @ViewChild('mapOfNodesContainer') mapOfNodesContainer!: ElementRef;
   
@@ -42,13 +52,11 @@ export class MapComponent implements AfterViewInit {
     const newNode: NodeDataModel = this.createNode({
       id:newNodeId,
       parentNodeId:parentNode.id,
-      x:parentNode.x+parentNode.width-10,
-      y:parentNode.y+parentNode.height-10,
+      x:parentNode.x+parentNode.width+20,
+      y:parentNode.y+parentNode.height+20,
       title:`Node nb ${newNodeId}`,
       color:parentNode.color
-
     })
-
     this.nodesMap.set(newNodeId, newNode);
   }
 
@@ -59,10 +67,10 @@ export class MapComponent implements AfterViewInit {
     return {
       id: partial.id ?? 0,
       parentNodeId: partial.parentNodeId ?? 0,
-      x: partial.x ?? 100,  //very dangerous hardcoded ratio -> getLineCoordinates()
-      y: partial.y ?? 100,
+      x: partial.x ?? 50,  //very dangerous hardcoded ratio -> getLineCoordinates()
+      y: partial.y ?? 50,
       width: partial.width ?? 100,
-      height: partial.height ?? 100,
+      height: partial.height ?? 200,
       title: partial.title ?? '',
       text: partial.text ?? '',
       color: partial.color ?? '#007bff'
@@ -73,185 +81,191 @@ export class MapComponent implements AfterViewInit {
     return Array.from(this.nodesMap.values());
   }
 
-  getLineCoordinates(node: NodeDataModel) {
-    const parent = this.nodesMap.get(node.parentNodeId);
-    if (!parent) return { xchild: -1, ychild: -1, xparent: -1, yparent: -1 };
-    //node xy coord are in viewport coordinate syst 
-    //svg xy coord are parent component coordinate syst because he is in the map container
-    //console.log(this.mapContainerCoordXY.x+' '+this.mapContainerCoordXY.y)
+  getNdCenterXY(node: NodeDataModel) {   
     return {
-      xchild: (node.x - this.mapContainerCoordXY.x) + (node.width)/2,
-      ychild: (node.y - this.mapContainerCoordXY.y) + (node.height)/2,
-      xparent: (parent.x - this.mapContainerCoordXY.x) + (parent.width)/2,
-      yparent: (parent.y - this.mapContainerCoordXY.y) + (parent.height)/2
+      x: (node.x - this.mapContainerCoordXY.x) + (node.width)/2,
+      y: (node.y - this.mapContainerCoordXY.y) + (node.height)/2,
     };
   }
-  getBezierPath(node: NodeDataModel)
+
+/**
+ * return input node if no parent
+ * @param pChildNode 
+ * @returns 
+ */
+  getParentNode(pChildNode: NodeDataModel){
+    const parent = this.nodesMap.get(pChildNode.parentNodeId);
+    if(!parent) {return pChildNode}
+    return parent;
+  }
+
+  rect4Vertex(node: NodeDataModel, ctr: {x:number,y:number},ratioRect: number)
   {
-    const parent = this.nodesMap.get(node.parentNodeId);
-    // coordiante of the centres of parent and child
-    const xlineChild = this.getLineCoordinates(node).xchild;
-    const yLineChild = this.getLineCoordinates(node).ychild;
-    const xLineParent = this.getLineCoordinates(node).xparent;
-    const yLineParent = this.getLineCoordinates(node).yparent;
-    console.log(`Centers of 2 divs are ${xlineChild},${xLineParent} and ${xLineParent},${yLineParent}`);
-    //the bezier curve is calculated via 4 point "M x1,y1 C c1x,c1y c2x,c2y x2,y2"
-    //we need 4 curve for the animation
-    //for the animation we use an ellipse that intersect the edges of the current node
-    //the points needed for 2 curve (8 points) of one node are all contained as cornes of 4 squares with sides equal to the center of the ellipse to the intersection of the line and the ellipse
-    //the sqares follow the line inclination
+    const parentNd = this.getParentNode(node)
+    const ctrPaNd = this.getNdCenterXY(parentNd)
+    const ctrNd = this.getNdCenterXY(node)
 
-    //we can use the intersection between the line and the ellipse at 0 pi/2 and -pi/2 rotation
+    const lineInterNd = this.nodeLineInter(node)
+    const line = new Line(lineInterNd.c1.x,lineInterNd.c1.y,lineInterNd.c2.x,lineInterNd.c2.y)
 
-    const lineSlope = ((xLineParent-yLineParent)/(xlineChild-xLineParent))
-    console.log(`Slope is ${lineSlope}`)
-    // y = slope*x
-    //console.log(this.ellipseLineIntersection(node.height,node.width,lineSlope))
-    const intersections = this.ellipseLineIntersection(node.height,node.width,lineSlope);
-    const intersectionsMPI = this.ellipseLineIntersection(node.height,node.width,this.rotateSlope90Degrees(lineSlope).minus90);
-    const intersectionsPPI = this.ellipseLineIntersection(node.height,node.width,this.rotateSlope90Degrees(lineSlope).plus90);
-    const x1 = intersectionsMPI[0].x  
-    const y1 = intersectionsMPI[0].y 
-
-    //const xc1 = intersections[0].x-intersectionsMPI[0].x
-    //const yc1 = intersections[0].y
-
-    const xc2 = intersections[0].x + xlineChild
-    const yc2 = intersections[0].y +xLineParent
-
-    const x2 = lineSlope * yc2 *2 + xlineChild
-    const y2 = lineSlope * xc2 *2 +xLineParent
-    //console.log(`M ${x1},${y1} C ${0},${0} ${xc2},${yc2} ${x2},${y2}`)
-    console.log(`M ${x1},${y1}  ${xlineChild}`)
-    //return  `M ${x1},${y1} C ${x1*v},${y1*v} ${x2*v},${y2*v} ${x2},${y2}`
-    /*//then we find the coord where the rect intersect the ellipse 
-    const x1 = this.calculateEllipseX(node.width/2,node.height/2,(node.height/2))
-    const y1 = this.calculateEllipseY(node.width/2,node.height/2,(node.width/2))
-
-    const x2 = node.width/2 + node.x
-    const y2 = node.height/2 + node.y*/
-
-    /*const c1x =
-    const c1y =
-    const c2x =
-    const c2y =*/
-/*
-    if (!x1 || !y1 || !x2 || !y2 ) return `M ${x1},${y1} C ${x1},${y1} ${x2},${y2} ${x2},${y2}`;
-    const v=1.3
-    return  `M ${x1},${y1} C ${x1*v},${y1*v} ${x2*v},${y2*v} ${x2},${y2}`
-    //d="M 20,100 C 100,0 200,200 280,100"
-    //d="M x1,y1 C c1x,c1y c2x,c2y x2,y2"*/
+    //console.log(parentNd.x,parentNd.y,node.x,node.y)
+    //const line = new Line(ctrPaNd.x,ctrPaNd.y,ctrNd.x,ctrNd.y)
+    //const ctr = line.getPointAtRatio(ratioLine)
+    return this.getRectangleVertices(ctr.x,ctr.y,node.width*ratioRect,node.height*ratioRect)
   }
 
-  calculateEllipseX(w: number, h: number, y: number): number {
-    return Math.sqrt(w * w - (y * y * w * w) / (h * h));
-  }
+  nodeLineInter(node: NodeDataModel){
 
-  calculateEllipseY(w: number, h: number, x: number): number {
-    return Math.sqrt(h * h - (x * x * h * h) / (w * w));
-  }
+    const parentNd = this.getParentNode(node)
+    const ctrPaNd = this.getNdCenterXY(parentNd)
+    const ctrNd = this.getNdCenterXY(node)
 
-  ellipseLineIntersection(a: number, b: number, m: number): { x: number; y: number }[] {
-    // a is semi-major axis
-    // b is semi-minor axis
-    const denominator = b*b + m*m*a*a;
-    const x = Math.sqrt(a*a * b*b / denominator);
-    const y = m * x;
+    return {
+      c1: this.rectangleLineIntersection(ctrNd.x, ctrNd.y,
+                                          node.width, node.height, 
+                                          ctrNd.x, ctrNd.y,
+                                          ctrPaNd.x,ctrPaNd.y),
+      c2: this.rectangleLineIntersection(ctrPaNd.x, ctrPaNd.y,
+                                          parentNd.width, parentNd.height, 
+                                          ctrPaNd.x,ctrPaNd.y,
+                                          ctrNd.x, ctrNd.y)
+    }
+  }
+  getRectangleVertices(
+    xc: number,
+    yc: number,
+    width: number,
+    height: number
+  ): { x: number; y: number }[] {
+    const w2 = width / 2;
+    const h2 = height / 2;
 
     return [
-      // Access first intersection point
-      { x: x, y: y },
-      { x: -x, y: -y }
+      { x: xc - w2, y: yc - h2 }, // top-left
+      { x: xc + w2, y: yc - h2 }, // top-right
+      { x: xc + w2, y: yc + h2 }, // bottom-right
+      { x: xc - w2, y: yc + h2 }  // bottom-left
     ];
   }
+  rectangleLineIntersection(
+    centerX: number,
+    centerY: number,
+    width: number,
+    height: number,
+    x1: number, y1: number,
+    x2: number, y2: number
+  ): {x: number, y: number} {
 
-  rotateSlope90Degrees(m: number ): { plus90: number , minus90: number  } {
-    if (m === 0) {
-      // horizontal line -> rotated slopes vertical (undefined)
-      return { plus90: 0, minus90: 0 };
+    const left = centerX - width / 2;
+    const right = centerX + width / 2;
+    const top = centerY - height / 2;
+    const bottom = centerY + height / 2;
+
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+
+    const tValues: number[] = [];
+
+    // éviter division par 0
+    if (dx !== 0) {
+      tValues.push((left - x1) / dx);
+      tValues.push((right - x1) / dx);
     }
-    if (m === undefined) {
-      // vertical line -> rotated slopes horizontal (0)
-      return { plus90: 0, minus90: 0 };
+    if (dy !== 0) {
+      tValues.push((top - y1) / dy);
+      tValues.push((bottom - y1) / dy);
     }
-    const rotatedSlope = -1 / m;
-    return { plus90: rotatedSlope, minus90: rotatedSlope };
+
+    // filtrer t > 0
+    const tExit = tValues.filter(t => t > 0).sort((a,b)=>a-b)[0];
+
+    if (tExit === undefined) return {x:0,y:0};
+
+    return {
+      x: x1 + tExit * dx,
+      y: y1 + tExit * dy
+    };
+  }
+  generateBezierPaths(node: NodeDataModel): string[] {
+    const parentNode = this.getParentNode(node);
+    if (!parentNode) return [];
+
+    const parentCorners = this.getRectangleVertices(
+      this.getNdCenterXY(parentNode).x,
+      this.getNdCenterXY(parentNode).y,
+      parentNode.width,
+      parentNode.height
+    );
+
+    const childCorners = this.getRectangleVertices(
+      this.getNdCenterXY(node).x,
+      this.getNdCenterXY(node).y,
+      node.width,
+      node.height
+    );
+    const lineCoord = this.nodeLineInter(node);
+    const line = new Line(lineCoord.c1.x, lineCoord.c1.y, lineCoord.c2.x, lineCoord.c2.y);
+    
+    //node, distance sur la ligne des 4 poitns d'accroche, taille du rectangle d'accroche
+    const ratioGrandRect = 0.08;
+    const ratioPetitRect = 0.045;
+    const ratioDistGrandRect = 0.05;
+    const ratioDistPetitRect = 0.01;
+    const ratioFinPath = 0.4;
+    const distanceMaxAnim = 200;
+    //distance max accroche sur le segment
+    let pEndChild =  line.getPointAtRatio(ratioFinPath);
+    let pEndParent = line.getPointAtRatio(1-ratioFinPath);
+
+    let controlChildren = this.rect4Vertex(node, line.getPointAtRatio(ratioDistGrandRect), ratioGrandRect)
+      .concat(this.rect4Vertex(node, line.getPointAtRatio(ratioDistPetitRect), ratioPetitRect));
+
+    let controlParents= this.rect4Vertex(node, line.getPointAtRatio(1-ratioDistPetitRect), ratioPetitRect)
+      .concat(this.rect4Vertex(node, line.getPointAtRatio(1-ratioDistGrandRect), ratioGrandRect));
+
+    if (line.getLength() >= distanceMaxAnim)
+    {
+      //distance max accroche sur le segment
+      pEndChild = line.getPointAtDistance(ratioFinPath*distanceMaxAnim) ;
+      pEndParent = line.getPointAtDistance(line.getLength()-ratioFinPath*distanceMaxAnim);
+
+      controlChildren = this.rect4Vertex(node, line.getPointAtDistance(distanceMaxAnim*ratioDistGrandRect), ratioGrandRect)
+        .concat(this.rect4Vertex(node, line.getPointAtDistance(distanceMaxAnim*ratioDistPetitRect), ratioPetitRect));
+
+      controlParents= this.rect4Vertex(node, line.getPointAtDistance(line.getLength()-distanceMaxAnim*ratioDistPetitRect), ratioPetitRect)
+        .concat(this.rect4Vertex(node, line.getPointAtDistance(line.getLength()-distanceMaxAnim*ratioDistGrandRect ), ratioGrandRect));
+    }
+    console.log(controlParents.length)
+
+
+
+    let paths: string[] = [];
+
+    // 4 courbes partant du parent → vers 30 %
+    for (let i = 0; i < 2; i++) {
+      const start = parentCorners[i];
+      const ctrl1 = controlParents[i];
+      const ctrl2 = controlParents[i + 4];
+      const midPt = pEndParent;
+      const ctrl3 = controlParents[i + 2];
+      const ctrl4 = controlParents[i + 6];
+      const end = parentCorners[i + 2];
+      paths.push(`M ${start.x},${start.y} C ${ctrl1.x},${ctrl1.y} ${ctrl2.x},${ctrl2.y} ${midPt.x},${midPt.y} C ${ctrl4.x},${ctrl4.y} ${ctrl3.x},${ctrl3.y} ${end.x},${end.y} Z`);
+    }
+
+    // 4 courbes partant de l'enfant → vers 70 %
+    for (let i = 0; i < 2; i++) {
+      const start = childCorners[i];
+      const ctrl1 = controlChildren[i];
+      const ctrl2 = controlChildren[i + 4];
+      const midPt = pEndChild;
+      const ctrl3 = controlChildren[i+2];
+      const ctrl4 = controlChildren[i + 6];
+      const end = childCorners[i+2];
+      paths.push(`M ${start.x},${start.y} C ${ctrl1.x},${ctrl1.y} ${ctrl2.x},${ctrl2.y} ${midPt.x},${midPt.y} C ${ctrl4.x},${ctrl4.y} ${ctrl3.x},${ctrl3.y} ${end.x},${end.y} Z`);
+    }
+
+    return paths;
   }
 
 }
-
-/*
-  getLineCoordinatesTest() {
-    return { x1:0, y1: 100, x2: document.documentElement.clientWidth, y2: 100,
-       xw1:0, yw1: 110, xw2: window.innerWidth, yw2: 110
-     };
-  }
-
-<line         
-    [attr.x1]="getLineCoordinatesTest().x1"
-    [attr.y1]="getLineCoordinatesTest().y1"
-    [attr.x2]="getLineCoordinatesTest().x2"
-    [attr.y2]="getLineCoordinatesTest().y2"
-    stroke="black" 
-    stroke-width="3" />
-
-    <line         
-    [attr.x1]="getLineCoordinatesTest().xw1"
-    [attr.y1]="getLineCoordinatesTest().yw1"
-    [attr.x2]="getLineCoordinatesTest().xw2"
-    [attr.y2]="getLineCoordinatesTest().yw2"
-    stroke="black" 
-    stroke-width="3" />
-
-    <line         
-    x1="50"
-    y1="50"
-    x2="100"
-    y2="100"
-    stroke="black" 
-    stroke-width="3" />
-
-           <line         
-                [attr.x1]="0"
-                [attr.y1]="nodesMapToArray[0].y"
-                [attr.x2]="nodesMapToArray[0].x"
-                [attr.y2]="nodesMapToArray[0].y"
-                stroke="black" 
-                stroke-width="3" />
-            <line         
-                [attr.x1]="nodesMapToArray[0].x"
-                [attr.y1]="0"
-                [attr.x2]="nodesMapToArray[0].x"
-                [attr.y2]="nodesMapToArray[0].y"
-                stroke="black" 
-                stroke-width="3" />
-
-
-                 <div style="position:fixed;top:300px;left:300px;border:1px solid black;width:100px;height: 100px;"></div>
-    <div style="position:fixed;top:400px;left:800px;border:1px solid black;width:100px;height: 100px;"></div>
-
-
-    <div style="position:fixed;left:300px;top:500px;border:1px solid black;width:200px;height: 200px;"></div>
-    <div style="position:fixed;left:800px;top:600px;border:1px solid black;width:200px;height: 200px;"></div>
-
-
-        <path 
-            [attr.d]="`M 500,500 C 500,600 800,700 800,600`"  
-            stroke="Blue" 
-            stroke-width="3" 
-            fill="transparent"/>
-        <path 
-            [attr.d]="`M 500,700 C 500,600 800,700 800,800`" 
-            stroke="cyan" 
-            stroke-width="3" 
-            fill="transparent"/>
-
-        <path 
-            [attr.d]="`M 400,100 C 400,150 400,150 500,150`"  
-            stroke="red" 
-            stroke-width="3" 
-            fill="transparent"/>
-
-
-            https://www.desmos.com/calculator/rfdr5ffbxd
-*/

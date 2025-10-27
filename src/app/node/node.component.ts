@@ -39,6 +39,7 @@ export class Node {
 
   ngAfterViewInit() 
   {
+    console.log(this.node.color)
     this.nodeMinimised ? null : this.adjustTextAreaHeight();
   }
 

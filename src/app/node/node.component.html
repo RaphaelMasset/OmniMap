@@ -2,8 +2,8 @@
 <div 
   #nodeContainer
   class="node-container" 
-  [style.border-color]="node.color"
   [style.background-color]="node.color"
+  [style.color]="node.color"
   
   (mousedown)="onMouseDown($event)"
   [style.position]="'absolute'"
@@ -11,6 +11,9 @@
   [style.top.px]="node.y"
   [style.width.px]="node.width"
   [style.height.px]="node.height"
+  [ngStyle]="{
+    'border': '1px solid ' + node.color
+  }"
   >
   
   <input 
