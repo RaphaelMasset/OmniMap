@@ -11,9 +11,7 @@
   [style.top.px]="node.y"
   [style.width.px]="node.width"
   [style.height.px]="node.height"
-  [ngStyle]="{
-    'border': '1px solid ' + node.color
-  }"
+
   >
   
   <input 
@@ -53,5 +51,6 @@
         </ul>
     </div>
   }
+  <div #resizinghandle class="resizinghandle" ></div>
 
 </div>

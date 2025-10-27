@@ -1,6 +1,7 @@
 import { Component, ElementRef, HostListener, ViewChild, Input, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NodeDataModel } from '../models/node-data.model';
+import { T } from '@angular/cdk/keycodes';
 //import { DragDropModule,CdkDragEnd,CdkDragMove } from '@angular/cdk/drag-drop';
 
 @Component({
@@ -19,6 +20,7 @@ export class Node {
   @ViewChild('textArea') textArea!: ElementRef;
   @ViewChild('menu') menuElement!: ElementRef;
   @ViewChild('nodeContainer') nodeContainer!: ElementRef;
+  @ViewChild('nodeContainer') resizinghandle!: ElementRef;
   @ViewChild('colorPicker') colorPicker!: ElementRef;
 
 
@@ -27,7 +29,9 @@ export class Node {
   menuX = 0;
   menuY = 0;
 
-  private dragging = false;
+  private moving = false;
+  private resizing = false;
+  
   private lastX = 0;
   private lastY = 0;
 
@@ -132,7 +136,6 @@ export class Node {
 
     if (!clickedInsideMenu && !clickedInsideColorPicker && this.menuVisible == true) 
     {
-      console.log(`close menu bc it was open? ${this.menuVisible} and clicked on; Menu: ${clickedInsideMenu} ColorPicker: ${clickedInsideColorPicker}` )
       this.menuVisible = false;
     }
   }
@@ -142,7 +145,13 @@ export class Node {
     window.dispatchEvent(new CustomEvent('nodeClicked', { detail: this.node.title }));
     const clickedElement = event.target as HTMLElement;
     if (clickedElement.tagName === 'INPUT' || clickedElement.tagName === 'TEXTAREA'){return}
-    this.dragging = true;
+    if (this.clickIsOnHandle(event)){
+      this.moving = false;
+      this.resizing = true;
+    }else{ 
+      this.moving = true;
+      this.resizing = false;
+    }
     this.lastX = event.clientX;
     this.lastY = event.clientY;
     window.addEventListener('mousemove', this.onMouseMove);
@@ -150,22 +159,37 @@ export class Node {
   }
 
   onMouseMove = (event: MouseEvent) => {
-    if (!this.dragging) return;
-    const rect = this.nodeContainer.nativeElement.getBoundingClientRect();
     const dx = event.clientX - this.lastX;
     const dy = event.clientY - this.lastY;
-    this.node.x += dx;
-    this.node.y += dy;
+    if (this.moving){   
+      this.node.x += dx;
+      this.node.y += dy;
+    } else if (this.resizing){
+      const rect = this.nodeContainer.nativeElement.getBoundingClientRect();
+      if ((this.node.width + dx) >0 && (this.node.height + dy)>0)
+      {
+        this.node.width += dx;
+        this.node.height += dy;
+      }
+    }
     this.lastX = event.clientX;
-    this.lastY = event.clientY;
-    this.node.width = rect.width;
-    this.node.height = rect.height;
+    this.lastY = event.clientY; 
   };
 
   onMouseUp = (event: MouseEvent) => {
-    this.dragging = false;
+    this.moving = false;
     window.removeEventListener('mousemove', this.onMouseMove);
     window.removeEventListener('mouseup', this.onMouseUp);
   };
- 
+
+  clickIsOnHandle(event: MouseEvent) {
+    const rect = this.resizinghandle.nativeElement.getBoundingClientRect();
+    const handlesize = 10; // pixels
+
+    const xOk = event.clientX > rect.right - handlesize && event.clientX < rect.right;
+    const yOk = event.clientY > rect.bottom - handlesize && event.clientY < rect.bottom;
+    console.log(xOk && yOk)
+    return xOk && yOk
+  }
+
 }

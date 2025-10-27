@@ -69,8 +69,8 @@ export class MapComponent implements AfterViewInit {
       parentNodeId: partial.parentNodeId ?? 0,
       x: partial.x ?? 50,  //very dangerous hardcoded ratio -> getLineCoordinates()
       y: partial.y ?? 50,
-      width: partial.width ?? 100,
-      height: partial.height ?? 200,
+      width: partial.width ?? this.defaultNodeDim.w,
+      height: partial.height ?? this.defaultNodeDim.h,
       title: partial.title ?? '',
       text: partial.text ?? '',
       color: partial.color ?? '#007bff'

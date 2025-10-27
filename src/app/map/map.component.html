@@ -3,8 +3,8 @@
     <map-header/>
     @for (node of nodesMapToArray; track node.id) 
     {     
+    <div>{{node.height}}</div>
         <app-node
-            
             [node]="node"
             (currentNodeIdForNewChildNode)="addChildNode($event)">
         </app-node>  
