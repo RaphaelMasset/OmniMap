@@ -37,13 +37,10 @@ export class Node {
 
   maxHeightTextArea = 1000;
 
-  get title() {
-    return this.node.title;
-  }
 
   ngAfterViewInit() 
   {
-    console.log(this.node.color)
+    //console.log(this.node.color)
     this.nodeMinimised ? null : this.adjustTextAreaHeight();
   }
 
@@ -63,8 +60,6 @@ export class Node {
     this.nodeMinimised ? null : this.adjustTextAreaHeight();
   }
 
-
-
   onMenuAction(action: string, event: Event) {
      // close menu on action
     const input = event.target as HTMLInputElement;
@@ -82,7 +77,6 @@ export class Node {
 
       case 'MinMaximiseNode':
         this.nodeMinimised = !this.nodeMinimised;
-
 
         if (!this.nodeMinimised) {
           setTimeout(() => {
@@ -108,7 +102,6 @@ export class Node {
     if(event.button == 2)
     {
       //cant prevent default context menu here because contextmenu event will be fired after
-
     }  
   }
 
@@ -139,7 +132,6 @@ export class Node {
       this.menuVisible = false;
     }
   }
-
 
   onMouseDown(event: MouseEvent) {
     window.dispatchEvent(new CustomEvent('nodeClicked', { detail: this.node.title }));
@@ -188,8 +180,7 @@ export class Node {
 
     const xOk = event.clientX > rect.right - handlesize && event.clientX < rect.right;
     const yOk = event.clientY > rect.bottom - handlesize && event.clientY < rect.bottom;
-    console.log(xOk && yOk)
+    //console.log(xOk && yOk)
     return xOk && yOk
   }
-
 }

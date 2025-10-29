@@ -5,8 +5,8 @@ export interface NodeDataModel {
   y:number;
   width:number;
   height:number;
-
-  title?: string;
+  title: string; 
+  color: string;
   text?: string;
-  color?: string;
+  [key: string]: number | string | undefined; // Allow indexing by string keys
 }

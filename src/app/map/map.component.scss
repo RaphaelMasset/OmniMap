@@ -2,6 +2,8 @@
 
 .map-of-nodes {
   z-index: 2;
+  user-select: none; /* Prevent text selection during drag */
+  will-change: transform; /* Optimize for transform changes */
 }
 
 map-header, svg, .map-of-nodes {

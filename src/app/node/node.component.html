@@ -18,7 +18,7 @@
     type="text" 
     placeholder="Title"  
     class="node-title-input"
-    [value]="title"
+    [value]="node.title"
     (mousedown)="null"
     (blur)="updateTitle($event)">
   @if(!nodeMinimised)
@@ -27,6 +27,7 @@
       #textArea
       placeholder="Input your notes here"
       class="node-text-input" 
+      [value]="node.text"
       (input)="updateTextArea($event)"></textarea>
   }
   @if(menuVisible)

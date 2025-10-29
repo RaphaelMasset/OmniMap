@@ -1,18 +1,18 @@
 
 <div class="map-of-nodes" #mapOfNodesContainer>
-    <map-header/>
+    <map-header #mapHeader (csvWriteClicked)="writeCsv()" (csvUploadClicked)="uploadCsv()"/>
+    <input type="file" #fileInput accept=".csv,text/csv" style="display: none;" (change)="onFileSelected($event)">
     @for (node of nodesMapToArray; track node.id) 
     {     
-    <div>{{node.height}}</div>
-        <app-node
+        <app-node 
             [node]="node"
-            (currentNodeIdForNewChildNode)="addChildNode($event)">
+            (currentNodeIdForNewChildNode)="addNewChildNodeToNodeMap($event)">
         </app-node>  
     }               
     <svg> 
         @for (node of nodesMapToArray; track node.id) 
         {
-            @if(node.parentNodeId != 0)
+            @if(node.id != 0)
             {       
                 <line         
                     [attr.x1]="getNdCenterXY(node).x"

@@ -1,5 +1,6 @@
 // a ts class must be exported so it can be used in other files aswell
-import { Component } from '@angular/core'
+import { Component, EventEmitter, Output, ViewChild, ElementRef  } from '@angular/core'
+import { CommonModule} from  '@angular/common';
 
 @Component({
     selector: 'map-header',
@@ -12,12 +13,22 @@ import { Component } from '@angular/core'
 })
 export class HeaderComponent{
     lastClickedNodeTitle : String = '';
+    
+    @Output() csvWriteClicked = new EventEmitter<void>();
+    @Output() csvUploadClicked = new EventEmitter<void>();
 
     constructor() {
         window.addEventListener('nodeClicked', (event: any) => {
             this.lastClickedNodeTitle = event.detail;
-            console.log('received')
+            //console.log('nodeClicked received by header')
         });
+    }
+
+    downloadCicked(){
+        this.csvWriteClicked.emit();
+    }
+    triggerFileInput(){
+        this.csvUploadClicked.emit();
     }
 
 }

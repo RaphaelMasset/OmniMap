@@ -1,10 +1,9 @@
-import { AfterViewInit, Component, ViewChild,ElementRef  } from '@angular/core';
-import { CommonModule, NgFor} from  '@angular/common';
+import { QueryList, AfterViewInit, Component, ViewChild, ViewChildren, ElementRef  } from '@angular/core';
+import { CommonModule} from  '@angular/common';
 import { Node } from '../node/node.component';
 import { NodeDataModel } from '../models/node-data.model';
 import { HeaderComponent } from '../header/header.component';
 import { Line } from './Line';
-
 
 @Component({
   selector: 'app-map',
@@ -19,26 +18,248 @@ export class MapComponent implements AfterViewInit {
   defaultNodeDim = { w: 100, h: 100 };
   //numbers = Array.from({ length: 100 }, (_, i) => i); //to create a background grid
   iterationBezier = Array.from({ length: 8 }, (_, i) => i);
-
-  ratios = [
-    { rx: 0.1, ry: 0.1 },
-    { rx: 0.2, ry: 0.05 },
-    { rx: 0.8, ry: 0.05 },
-    { rx: 0.9, ry: 0.1 },
-  ];
-
   @ViewChild('mapOfNodesContainer') mapOfNodesContainer!: ElementRef;
+  @ViewChild('mapHeader', { read: ElementRef }) header!: ElementRef;
+  @ViewChild('fileInput', { read: ElementRef }) fileInput!: ElementRef;
+  @ViewChildren(Node, { read: ElementRef }) nodeElements!: QueryList<ElementRef>;
+  
+  isDragging = false;
+  startX = 0;
+  startY = 0;
+  translateX = 0;
+  translateY = 0;
+
+  scale = 1;
+
+  mapOfNodescontainerNatEl!: HTMLElement; // declare only
+
+  spaceTakenHeader = 45;
   
   constructor() {
-    const initialNode: NodeDataModel = this.createNode({id:1,parentNodeId:0,title:'origin'})
-    this.nodesMap.set(1, initialNode); // Push inside constructor
+    const initialNode: NodeDataModel = this.createNode({id:0,parentNodeId:0,title:'origin'})
+    this.nodesMap.set(initialNode.id, initialNode); // Push inside constructor
   }
   ngAfterViewInit() {
-    const rect = this.mapOfNodesContainer.nativeElement.getBoundingClientRect();
+    this.mapOfNodescontainerNatEl = this.mapOfNodesContainer.nativeElement;
+    const rect = this.mapOfNodescontainerNatEl.getBoundingClientRect();
+    const rectheader = this.header.nativeElement.getBoundingClientRect();
     this.mapContainerCoordXY = { x: rect.left, y: rect.top };
+    this.spaceTakenHeader = rectheader.top + rectheader.height;
+
+    this.mapOfNodescontainerNatEl.addEventListener('mousedown', (event: MouseEvent) => {
+      if (this.isEventInsideNode(event)) {
+        // Click inside a node: don't drag the map, let node handle dragging
+        return;
+      }
+      this.isDragging = true;
+      this.startX = event.clientX;
+      this.startY = event.clientY;
+      this.mapOfNodescontainerNatEl.style.cursor = 'move';
+
+      event.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (event: MouseEvent) => {
+      if (!this.isDragging) return;
+      console.log('event is outside Node')
+
+      const dx = event.clientX - this.startX;
+      const dy = event.clientY - this.startY;
+      //TODo emrge that in the emthode
+      this.mapOfNodescontainerNatEl.style.transform = `translate(${this.translateX + dx}px, ${this.translateY + dy}px)  scale(${this.scale})`;
+    });
+
+    window.addEventListener('mouseup', (event: MouseEvent) => {
+      if (!this.isDragging) return;
+
+      const dx = event.clientX - this.startX;
+      const dy = event.clientY - this.startY;
+
+      this.translateX += dx;
+      this.translateY += dy;
+
+      this.isDragging = false;
+      this.mapOfNodescontainerNatEl.style.cursor = 'default';
+
+      // Apply final translation so it persists
+      this.translateScale();
+    });
+
+    this.mapOfNodescontainerNatEl.addEventListener('wheel', (event: WheelEvent) => {
+      event.preventDefault(); // prevent scrolling page
+
+      const wheelDelta = event.deltaY;
+
+      const zoomSpeed = 0.001; // adjust sensitivity
+
+      // Zoom out if wheelDelta > 0, zoom in if < 0
+      if (wheelDelta > 0) {
+        this.scale = Math.max(0.1, this.scale - zoomSpeed * wheelDelta);
+      } else {
+        this.scale = Math.min(5, this.scale - zoomSpeed * wheelDelta); // negative deltaY
+      }
+
+      // Apply combined translate and scale transform
+      this.translateScale();
+    }, { passive: false });
+
+  
   }
 
-  addChildNode(ParentId: number){
+    translateScale(){
+      this.mapOfNodescontainerNatEl.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
+    }
+
+  isEventInsideNode(event: MouseEvent): boolean {
+    const target = event.target as HTMLElement;
+
+    for (const nodeElem of this.nodeElements) {
+      if (nodeElem.nativeElement.contains(target)) {
+        return true; // The event target is inside a node
+      }
+    }
+    return false;
+  }
+
+  writeCsv(){
+    //create a list of header by getting the keys of hte node object
+    const headers = Object.keys(this.nodesMap.get(0) || {});
+    //conver teh map of objet to a list of object
+    const nodeArray = this.nodesMapToArray;
+
+    const csvRows = [
+      headers.join(','), // ligne d'entête
+      ...nodeArray.map(node => headers.map(header => JSON.stringify(node[header] ?? '')).join(',') // ligne de données pour chaque noeud
+      )
+    ];
+    //csvRows.forEach(e=> console.log(e))
+
+    const csvString = csvRows.join('\n');
+    //console.log(nodeArray)
+    
+    // Création d'un Blob contenant le CSV
+    const blob = new Blob([csvString], { type: 'text/csv' });
+
+    // Création d'une URL pour ce Blob
+    const url = URL.createObjectURL(blob);
+    //creation NOM DE FICHIER
+    // Récupère la date actuelle
+    const now = new Date();
+
+    // Formate la date yyyy-MM-dd
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // mois de 0 à 11
+    const day = String(now.getDate()).padStart(2, '0');
+
+    // Formate l'heureMinute hhmm
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    console.log('writeCsv - minutes: '+minutes)
+
+    // Compose le nom du fichier (sans caractères interdits comme /)
+    const fileName = `OmniMap_${year}-${month}-${day}_${hours}:${minutes}.csv`;
+    //FIN CREA NOM FICHIER
+    // Création d'un lien pour le téléchargement
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', fileName);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+  }
+
+  uploadCsv(){
+    this.fileInput.nativeElement.click();
+    console.log("uploadCsv()")
+  }
+  onFileSelected(event: Event){ 
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) {
+      console.log("No file selected")
+      return;}
+
+    const file = input.files[0];
+
+    if (!file.name.endsWith('.csv')) {
+      alert('Please select a CSV file.');
+      return;
+    }
+
+    const userConfirmed = confirm('Proceeding will erase and replace the your current work are you sure ?');
+    if (userConfirmed) {
+      this.readCsvFile(file);
+    } else {
+      return
+    }
+    
+  }
+
+  readCsvFile(file: File) {
+    const reader = new FileReader();
+    console.log('readCsvFile before .onload')
+    reader.onload = () => {
+      console.log('readCsvFile inside .onload')
+      const csvText = reader.result as string;
+      const lines = csvText.split('\n');  //CSV text string into an array of lines
+      this.nodesMap = this.csvToMapWithHeader(lines)
+    }
+    reader.readAsText(file);
+    reader.onerror = () => console.error('File reading error', reader.error);
+    reader.onabort = () => console.warn('File reading aborted');
+  }
+
+  csvToMapWithHeader(lines: string[]): Map<number, NodeDataModel> {
+    const nodeMap = new Map<number, NodeDataModel>();
+
+    if (lines.length === 0){console.log('csvToMapWithHeader - no lines'); return nodeMap;};
+    const header = lines[0].split(','); // Get column names from first line
+
+    //get header index and return the string at this index for the given line
+    function getValue(columns: string[], name: string): string | undefined {
+      const index = header.indexOf(name);
+      if (index === -1) return undefined;
+      return stripQuotes(columns[index]);
+    }
+
+    function stripQuotes(value: string): string {
+      if (!value) return value;
+      if (value.startsWith('"') && value.endsWith('"')) {
+        return value.slice(1, -1);
+      }     
+      return value;
+    }
+
+    for (let i = 1; i < lines.length; i++) {
+      const nodeIValues = lines[i].split(',');
+
+      const idStr = getValue(nodeIValues, 'id');
+      if (!idStr){
+        console.log('line '+i+' id is invalid-skip')
+        continue;
+      }  // Skip invalid lines
+      //console.log(nodeIValues)
+      //console.log(getValue(nodeIValues, 'text'))
+      const nodeI: NodeDataModel = this.createNode({
+        id: Number(idStr),
+        parentNodeId: Number(getValue(nodeIValues, 'parentNodeId')),
+        x: Number(getValue(nodeIValues, 'x')),
+        y: Number(getValue(nodeIValues, 'y')),
+        width: Number(getValue(nodeIValues, 'width')),
+        height: Number(getValue(nodeIValues, 'height')),
+        title: getValue(nodeIValues, 'title') || '',
+        color: getValue(nodeIValues, 'color') || '',
+        text: getValue(nodeIValues, 'text'),
+      })
+    
+      nodeMap.set(nodeI.id, nodeI);
+    }
+    return nodeMap;
+  }
+
+  addNewChildNodeToNodeMap(ParentId: number){
     const parentNode = this.nodesMap.get(ParentId);
     if (!parentNode) return
     let highestId = 0;
@@ -67,13 +288,13 @@ export class MapComponent implements AfterViewInit {
     return {
       id: partial.id ?? 0,
       parentNodeId: partial.parentNodeId ?? 0,
-      x: partial.x ?? 50,  //very dangerous hardcoded ratio -> getLineCoordinates()
-      y: partial.y ?? 50,
+      x: partial.x ?? 50,  //TODO
+      y: partial.y ?? this.spaceTakenHeader+10,
       width: partial.width ?? this.defaultNodeDim.w,
       height: partial.height ?? this.defaultNodeDim.h,
-      title: partial.title ?? '',
+      title: partial.title ?? '', 
+      color: partial.color ?? '#007bff',
       text: partial.text ?? '',
-      color: partial.color ?? '#007bff'
     };
   }
 
@@ -235,9 +456,6 @@ export class MapComponent implements AfterViewInit {
       controlParents= this.rect4Vertex(node, line.getPointAtDistance(line.getLength()-distanceMaxAnim*ratioDistPetitRect), ratioPetitRect)
         .concat(this.rect4Vertex(node, line.getPointAtDistance(line.getLength()-distanceMaxAnim*ratioDistGrandRect ), ratioGrandRect));
     }
-    console.log(controlParents.length)
-
-
 
     let paths: string[] = [];
 
@@ -267,5 +485,4 @@ export class MapComponent implements AfterViewInit {
 
     return paths;
   }
-
 }
