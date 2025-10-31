@@ -466,6 +466,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const ratioDistPetitRect = 0.01;
     const ratioFinPath = 0.4;
     const distanceMaxAnim = 200;
+    const distanceTooLittle = 50;
     //distance max accroche sur le segment
     let pEndChild =  line.getPointAtRatio(ratioFinPath);
     let pEndParent = line.getPointAtRatio(1-ratioFinPath);
@@ -473,20 +474,35 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     let controlChildren = this.rect4Vertex(node, line.getPointAtRatio(ratioDistGrandRect), ratioGrandRect)
       .concat(this.rect4Vertex(node, line.getPointAtRatio(ratioDistPetitRect), ratioPetitRect));
 
-    let controlParents= this.rect4Vertex(node, line.getPointAtRatio(1-ratioDistPetitRect), ratioPetitRect)
-      .concat(this.rect4Vertex(node, line.getPointAtRatio(1-ratioDistGrandRect), ratioGrandRect));
+    let controlParents= this.rect4Vertex(parentNode, line.getPointAtRatio(1-ratioDistPetitRect), ratioPetitRect)
+      .concat(this.rect4Vertex(parentNode, line.getPointAtRatio(1-ratioDistGrandRect), ratioGrandRect));
 
+    //if nodes are too for set a max
     if (line.getLength() >= distanceMaxAnim)
     {
-      //distance max accroche sur le segment
+      //distance max accroche finale sur le segment
       pEndChild = line.getPointAtDistance(ratioFinPath*distanceMaxAnim) ;
       pEndParent = line.getPointAtDistance(line.getLength()-ratioFinPath*distanceMaxAnim);
 
       controlChildren = this.rect4Vertex(node, line.getPointAtDistance(distanceMaxAnim*ratioDistGrandRect), ratioGrandRect)
         .concat(this.rect4Vertex(node, line.getPointAtDistance(distanceMaxAnim*ratioDistPetitRect), ratioPetitRect));
 
-      controlParents= this.rect4Vertex(node, line.getPointAtDistance(line.getLength()-distanceMaxAnim*ratioDistPetitRect), ratioPetitRect)
-        .concat(this.rect4Vertex(node, line.getPointAtDistance(line.getLength()-distanceMaxAnim*ratioDistGrandRect ), ratioGrandRect));
+      controlParents= this.rect4Vertex(parentNode, line.getPointAtDistance(line.getLength()-distanceMaxAnim*ratioDistPetitRect), ratioPetitRect)
+        .concat(this.rect4Vertex(parentNode, line.getPointAtDistance(line.getLength()-distanceMaxAnim*ratioDistGrandRect ), ratioGrandRect));
+    }
+
+    //if nodes are too cloe reduce control rect size even more
+    if (line.getLength() <= distanceTooLittle)
+    {
+      const lratio = (line.getLength()/distanceTooLittle)
+      pEndChild =  line.getPointAtRatio(ratioFinPath*1/lratio);
+      pEndParent = line.getPointAtRatio(1-(ratioFinPath*1/lratio));
+ 
+      let controlChildren = this.rect4Vertex(node, line.getPointAtRatio(ratioDistGrandRect*lratio), ratioGrandRect*lratio)
+        .concat(this.rect4Vertex(node, line.getPointAtRatio(ratioDistPetitRect*lratio), ratioPetitRect*lratio));
+
+      let controlParents= this.rect4Vertex(parentNode, line.getPointAtRatio(1-(ratioDistPetitRect*lratio)), ratioPetitRect*lratio)
+        .concat(this.rect4Vertex(parentNode, line.getPointAtRatio(1-(ratioDistGrandRect*lratio)), ratioGrandRect*lratio));
     }
 
     let paths: string[] = [];
