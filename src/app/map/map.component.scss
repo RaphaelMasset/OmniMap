@@ -1,26 +1,25 @@
-
-
-.map-of-nodes {
-  z-index: 2;
-  user-select: none; /* Prevent text selection during drag */
-  will-change: transform; /* Optimize for transform changes */
-}
-
 map-header, svg, .map-of-nodes {
   position: fixed;
-  y: 0px;
-  x: 0px;
-  top: 0px;
-  left:0px;
+  top: 0;
+  left: 0;
 }
-svg {
-  width: 10000000px;
-  height: 10000000px; /* ou une hauteur fixe */
-  z-index: 0;
-}
-
 map-header{
   width: 100vw;
-  z-index: 1;
+  z-index: +4 !important;
   background-color: rgba(255, 255, 255, 0.2);
+} 
+map-of-nodes {
+  width: 100vw;
+  height: 100vh;
 }
+app-node{
+  z-index: +2 !important;
+}
+svg {
+  width: 100vw;
+  height: 100vh;
+  z-index: -1 !important;
+}
+
+
+

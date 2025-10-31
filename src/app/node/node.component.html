@@ -4,54 +4,39 @@
   class="node-container" 
   [style.background-color]="node.color"
   [style.color]="node.color"
-  
   (mousedown)="onMouseDown($event)"
   [style.position]="'absolute'"
   [style.left.px]="node.x"
   [style.top.px]="node.y"
   [style.width.px]="node.width"
-  [style.height.px]="node.height"
-
-  >
-  
+  [style.height.px]="node.height">  
   <input 
+    #titleArea
     type="text" 
     placeholder="Title"  
-    class="node-title-input"
+    class="title-area"
     [value]="node.title"
     (mousedown)="null"
     (blur)="updateTitle($event)">
   @if(!nodeMinimised)
   {
-    <textarea 
-      #textArea
-      placeholder="Input your notes here"
-      class="node-text-input" 
-      [value]="node.text"
-      (input)="updateTextArea($event)"></textarea>
-  }
-  @if(menuVisible)
-  {
     <div 
+      #textArea
+      class="text-area"
+      contenteditable="true"
+      (input)="updateTextArea($event)"></div>
+  }
+    <app-node-menu 
       #menu
+      [hidden]="!menuVisible"
+      [node]="node"
       [style.left.px]="menuX"
       [style.top.px]="menuY"
-      class="context-menu">
-        <ul>
-          <li (click)="onMenuAction('newNode',$event)">New child node</li>
-          <li>Set color:
-            <input 
-              #colorPicker  
-              type="color"
-              class="color-picker"
-              (input)="onMenuAction('color',$event)"
-              [value]="node.color || '#007bff'">
-          </li>
-          <li (click)="onMenuAction('MinMaximiseNode',$event)">{{ nodeMinimised ? 'Maximise' : 'Minimise' }}</li>
-          <li (click)="onMenuAction('delete',$event)">Delete</li>
-        </ul>
-    </div>
-  }
-  <div #resizinghandle class="resizinghandle" ></div>
+      (setColor)="onSetColor($event)"
+      (newChildNode)="onNewChildNode()"
+      (delateCurretnNode)="onDeleteCurrentNode()"
+      (minimise)="onMinimise()">
+    </app-node-menu>
 
+  <div #resizinghandle class="resizinghandle" ></div>
 </div>

@@ -1,0 +1,17 @@
+<div 
+#menu
+class="context-menu">
+    <ul>
+    <li (click)="onMenuAction('newNode',$event)">New child node</li>
+    <li>Set color:
+        <input 
+        #colorPicker  
+        type="color"
+        class="color-picker"
+        (input)="onMenuAction('color',$event)"
+        [value]="node.color || '#007bff'">
+    </li>
+    <!--li (click)="onMenuAction('MinMaximiseNode',$event)">{{ nodeMinimised ? 'Maximise' : 'Minimise' }}</li-->
+    <li (click)="onMenuAction('delete',$event)">Delete</li>
+    </ul>
+</div>

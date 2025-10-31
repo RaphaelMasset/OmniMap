@@ -1,4 +1,4 @@
-import { QueryList, AfterViewInit, Component, ViewChild, ViewChildren, ElementRef  } from '@angular/core';
+import { QueryList, AfterViewInit,HostListener, Component, OnDestroy, ViewChild, ViewChildren, ElementRef  } from '@angular/core';
 import { CommonModule} from  '@angular/common';
 import { Node } from '../node/node.component';
 import { NodeDataModel } from '../models/node-data.model';
@@ -12,28 +12,39 @@ import { Line } from './Line';
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.scss']
 })
-export class MapComponent implements AfterViewInit {
+export class MapComponent implements AfterViewInit, OnDestroy {
   nodesMap: Map<number, NodeDataModel> = new Map();
   mapContainerCoordXY = { x: 0, y: 0 };
   defaultNodeDim = { w: 100, h: 100 };
-  //numbers = Array.from({ length: 100 }, (_, i) => i); //to create a background grid
   iterationBezier = Array.from({ length: 8 }, (_, i) => i);
   @ViewChild('mapOfNodesContainer') mapOfNodesContainer!: ElementRef;
   @ViewChild('mapHeader', { read: ElementRef }) header!: ElementRef;
   @ViewChild('fileInput', { read: ElementRef }) fileInput!: ElementRef;
+  @ViewChild('scalableContainerNode', { read: ElementRef })  scalableContainerNode!: ElementRef;
+  @ViewChild('scalableContainerSVGLineAndPath', { read: ElementRef }) scalableSvgGroup!: ElementRef;
+
   @ViewChildren(Node, { read: ElementRef }) nodeElements!: QueryList<ElementRef>;
+  @ViewChildren('colorPicker', { read: ElementRef }) colorPickerElements!: QueryList<ElementRef>;
+  // Alt +124  |
   
-  isDragging = false;
+  clickedDownm = false;
   startX = 0;
   startY = 0;
   translateX = 0;
   translateY = 0;
-
   scale = 1;
 
   mapOfNodescontainerNatEl!: HTMLElement; // declare only
+  scalableContNode!: HTMLElement; // declare only
+  scalableContSVG!: HTMLElement; // declare only
 
-  spaceTakenHeader = 45;
+  spaceTakenHeader:number = 45;
+
+  private wheelListener = (event: WheelEvent) => this.onWheel(event);
+  private moveListener = (event: MouseEvent) => this.onMove(event);
+  private upListener = (event: MouseEvent) => this.onUp(event);
+  //todo get this form of notation
+  private downListener = (event: MouseEvent) => this.onDown(event);
   
   constructor() {
     const initialNode: NodeDataModel = this.createNode({id:0,parentNodeId:0,title:'origin'})
@@ -41,83 +52,45 @@ export class MapComponent implements AfterViewInit {
   }
   ngAfterViewInit() {
     this.mapOfNodescontainerNatEl = this.mapOfNodesContainer.nativeElement;
-    const rect = this.mapOfNodescontainerNatEl.getBoundingClientRect();
+    this.scalableContNode = this.scalableContainerNode.nativeElement;
+    this.scalableContSVG = this.scalableSvgGroup.nativeElement;
+    //const rect = this.mapOfNodescontainerNatEl.getBoundingClientRect();
     const rectheader = this.header.nativeElement.getBoundingClientRect();
-    this.mapContainerCoordXY = { x: rect.left, y: rect.top };
-    this.spaceTakenHeader = rectheader.top + rectheader.height;
-
-    this.mapOfNodescontainerNatEl.addEventListener('mousedown', (event: MouseEvent) => {
-      if (this.isEventInsideNode(event)) {
-        // Click inside a node: don't drag the map, let node handle dragging
-        return;
-      }
-      this.isDragging = true;
-      this.startX = event.clientX;
-      this.startY = event.clientY;
-      this.mapOfNodescontainerNatEl.style.cursor = 'move';
-
-      event.preventDefault();
+    
+    this.spaceTakenHeader = rectheader.bottom;
+    //initialise node  then correct his height after the view is loeaded //need timeout to avoid error
+    setTimeout(() => {
+      this.nodesMap.get(0)!.y = this.spaceTakenHeader + 10;
     });
+    
+    //this.mapContainerCoordXY = { x: rect.left, y: rect.top };
+    console.log('Header height: '+this.spaceTakenHeader)
+    
 
-    window.addEventListener('mousemove', (event: MouseEvent) => {
-      if (!this.isDragging) return;
-      console.log('event is outside Node')
+    const containerRect = this.mapOfNodescontainerNatEl.getBoundingClientRect();
+    this.mapContainerCoordXY = { x: containerRect.left, y: containerRect.top };
 
-      const dx = event.clientX - this.startX;
-      const dy = event.clientY - this.startY;
-      //TODo emrge that in the emthode
-      this.mapOfNodescontainerNatEl.style.transform = `translate(${this.translateX + dx}px, ${this.translateY + dy}px)  scale(${this.scale})`;
-    });
-
-    window.addEventListener('mouseup', (event: MouseEvent) => {
-      if (!this.isDragging) return;
-
-      const dx = event.clientX - this.startX;
-      const dy = event.clientY - this.startY;
-
-      this.translateX += dx;
-      this.translateY += dy;
-
-      this.isDragging = false;
-      this.mapOfNodescontainerNatEl.style.cursor = 'default';
-
-      // Apply final translation so it persists
-      this.translateScale();
-    });
-
-    this.mapOfNodescontainerNatEl.addEventListener('wheel', (event: WheelEvent) => {
-      event.preventDefault(); // prevent scrolling page
-
-      const wheelDelta = event.deltaY;
-
-      const zoomSpeed = 0.001; // adjust sensitivity
-
-      // Zoom out if wheelDelta > 0, zoom in if < 0
-      if (wheelDelta > 0) {
-        this.scale = Math.max(0.1, this.scale - zoomSpeed * wheelDelta);
-      } else {
-        this.scale = Math.min(5, this.scale - zoomSpeed * wheelDelta); // negative deltaY
-      }
-
-      // Apply combined translate and scale transform
-      this.translateScale();
-    }, { passive: false });
-
-  
+    this.mapOfNodescontainerNatEl.addEventListener('mousedown', this.downListener);
+    window.addEventListener('mousemove', this.moveListener);
+    window.addEventListener('mouseup', this.upListener);
+    this.mapOfNodescontainerNatEl.addEventListener('wheel', this.wheelListener);
+    
   }
 
-    translateScale(){
-      this.mapOfNodescontainerNatEl.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
-    }
+  translateScale(){
+    this.scalableContNode.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
+    this.scalableContSVG.setAttribute('transform', `translate(${this.translateX} ${this.translateY}) scale(${this.scale})`);
+  }
 
-  isEventInsideNode(event: MouseEvent): boolean {
+  isEventInsideOneNode(event: MouseEvent): boolean {
     const target = event.target as HTMLElement;
-
     for (const nodeElem of this.nodeElements) {
       if (nodeElem.nativeElement.contains(target)) {
         return true; // The event target is inside a node
       }
     }
+    //if you dont click on  node, no node id selected for next menu
+    //this.selectedNodeIdForMenu = null;
     return false;
   }
 
@@ -288,8 +261,8 @@ export class MapComponent implements AfterViewInit {
     return {
       id: partial.id ?? 0,
       parentNodeId: partial.parentNodeId ?? 0,
-      x: partial.x ?? 50,  //TODO
-      y: partial.y ?? this.spaceTakenHeader+10,
+      x: partial.x ?? 10, 
+      y: partial.y ?? 0,
       width: partial.width ?? this.defaultNodeDim.w,
       height: partial.height ?? this.defaultNodeDim.h,
       title: partial.title ?? '', 
@@ -308,6 +281,64 @@ export class MapComponent implements AfterViewInit {
       y: (node.y - this.mapContainerCoordXY.y) + (node.height)/2,
     };
   }
+  onNewChildNode(event: number) {
+    this.addNewChildNodeToNodeMap(event);
+  }
+  private onDown = (event: MouseEvent) => {
+    if (this.isEventInsideOneNode(event) || (event.button === 2)) {
+      return;
+    }
+    this.clickedDownm = true;
+    this.startX = event.clientX;
+    this.startY = event.clientY;
+    this.mapOfNodescontainerNatEl.style.cursor = 'move';
+  };
+
+  private onMove = (event: MouseEvent) => {
+     //onMove fire all the time even without click we need combiantion of both !!!
+    if (!this.clickedDownm) return;
+    const dx = event.clientX - this.startX;
+    const dy = event.clientY - this.startY;
+    this.translateX += dx;
+    this.translateY += dy;
+    //update startcoord bevause onMove will be fired again and again while moving clicked
+    this.startX = event.clientX;
+    this.startY = event.clientY;
+    this.translateScale();
+  };
+
+  private onUp = (event: MouseEvent) => {
+    if (!this.clickedDownm) return;
+    const dx = event.clientX - this.startX;
+    const dy = event.clientY - this.startY;
+    this.translateX += dx;
+    this.translateY += dy;
+    this.clickedDownm = false;
+    this.mapOfNodescontainerNatEl.style.cursor = 'default';
+    this.translateScale();
+  };
+
+  private onWheel = (event: WheelEvent) => {   
+    event.preventDefault();
+    
+    const rect = this.mapOfNodescontainerNatEl.getBoundingClientRect();
+    const offsetX = event.clientX - rect.left;
+    const offsetY = event.clientY - rect.top;
+    const preZoomX = (offsetX - this.translateX) / this.scale;
+    const preZoomY = (offsetY - this.translateY) / this.scale;
+    const zoomSpeed = 0.001;
+    const delta = event.deltaY;
+    if (delta > 0) {
+      this.scale = Math.max(0.1, this.scale - zoomSpeed * delta);
+    } else {
+      this.scale = Math.min(5, this.scale - zoomSpeed * delta);
+    }
+    this.translateX = offsetX - preZoomX * this.scale;
+    this.translateY = offsetY - preZoomY * this.scale;
+    this.translateScale();
+  };
+
+
 
 /**
  * return input node if no parent
@@ -484,5 +515,13 @@ export class MapComponent implements AfterViewInit {
     }
 
     return paths;
+  }
+
+  ngOnDestroy() {
+    this.mapOfNodescontainerNatEl.removeEventListener('mousedown', this.downListener);
+    window.removeEventListener('mousemove', this.moveListener);
+    window.removeEventListener('mouseup', this.upListener);
+
+    this.mapOfNodescontainerNatEl.removeEventListener('wheel', this.wheelListener);
   }
 }

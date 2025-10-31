@@ -21,6 +21,9 @@
             "polyfills": [
               "zone.js"
             ],
+            "scripts": [
+              "src/libs/marked.min.js"
+            ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -64,6 +67,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "hmr": false
+          },
           "configurations": {
             "production": {
               "buildTarget": "OmniMap:build:production"

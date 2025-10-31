@@ -1,15 +1,19 @@
+<map-header #mapHeader (csvWriteClicked)="writeCsv()" (csvUploadClicked)="uploadCsv()"/>
+<input type="file" #fileInput accept=".csv,text/csv" style="display: none;" (change)="onFileSelected($event)">
 
 <div class="map-of-nodes" #mapOfNodesContainer>
-    <map-header #mapHeader (csvWriteClicked)="writeCsv()" (csvUploadClicked)="uploadCsv()"/>
-    <input type="file" #fileInput accept=".csv,text/csv" style="display: none;" (change)="onFileSelected($event)">
-    @for (node of nodesMapToArray; track node.id) 
-    {     
-        <app-node 
-            [node]="node"
-            (currentNodeIdForNewChildNode)="addNewChildNodeToNodeMap($event)">
-        </app-node>  
-    }               
-    <svg> 
+    <div #scalableContainerNode>          
+        @for (node of nodesMapToArray; track node.id) 
+        {     
+            <app-node 
+                [node]="node"
+                [tranfo]="{tx: translateX, ty: translateY, scale: scale}"
+                (createChildNode)="onNewChildNode($event)">
+            </app-node>                      
+        }
+    </div>             
+    <svg > 
+        <g #scalableContainerSVGLineAndPath>
         @for (node of nodesMapToArray; track node.id) 
         {
             @if(node.id != 0)
@@ -21,7 +25,7 @@
                     [attr.y2]="getNdCenterXY(getParentNode(node)).y"
                     [attr.stroke]="node.color" 
                     stroke-width="2" />
-                <g id="bezierPaths">
+
                 @for (i of iterationBezier; track i) {
                     <path
                         [attr.d]="generateBezierPaths(node)[i]"
@@ -31,15 +35,13 @@
                         stroke-width="2"
                         />
                 }
-                </g>
-                
             }
-        }
-       
+        }    
         @empty {
         No items available
         }
-    </svg> 
+        </g>
+    </svg>   
 </div>
 
 

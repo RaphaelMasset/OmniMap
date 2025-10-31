@@ -1,30 +1,31 @@
 import { Component, ElementRef, HostListener, ViewChild, Input, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NodeDataModel } from '../models/node-data.model';
-import { T } from '@angular/cdk/keycodes';
-//import { DragDropModule,CdkDragEnd,CdkDragMove } from '@angular/cdk/drag-drop';
+import { NodeMenu } from '../node-menu/node-menu';
 
+declare var marked: any;
 @Component({
   selector: 'app-node',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,NodeMenu],
   templateUrl: './node.component.html',
   styleUrls: ['./node.component.scss']
 })
-export class Node {
-
+export class Node { 
   @Input() node!: NodeDataModel;
+  @Input() tranfo!: {tx: number, ty: number, scale: number};
+  
+  @ViewChild('nodeContainer', { read: ElementRef }) nodeContainer!: ElementRef;
 
-  @Output() currentNodeIdForNewChildNode = new EventEmitter<number>();
+  @Output() createChildNode = new EventEmitter<number>();
 
+  @ViewChild('titleArea') titleArea!: ElementRef;
   @ViewChild('textArea') textArea!: ElementRef;
-  @ViewChild('menu') menuElement!: ElementRef;
-  @ViewChild('nodeContainer') nodeContainer!: ElementRef;
-  @ViewChild('nodeContainer') resizinghandle!: ElementRef;
-  @ViewChild('colorPicker') colorPicker!: ElementRef;
-
+  @ViewChild('resizinghandle') resizinghandle!: ElementRef;
+  @ViewChild('menu',{ read: ElementRef }) menuElement!: ElementRef;
 
   nodeMinimised = false;
+
   menuVisible = false;
   menuX = 0;
   menuY = 0;
@@ -37,11 +38,73 @@ export class Node {
 
   maxHeightTextArea = 1000;
 
-
   ngAfterViewInit() 
   {
     //console.log(this.node.color)
     this.nodeMinimised ? null : this.adjustTextAreaHeight();
+
+    if (this.textArea && !this.nodeMinimised) {
+      const div = this.textArea.nativeElement as HTMLDivElement;
+    }
+    console.log(this.node.text)
+    this.textArea.nativeElement.innerText = this.node.text;
+  }
+
+  onSetColor(newColor: string) {
+    this.node.color = newColor;
+   // this.menuVisible = false;
+  }
+
+  onNewChildNode() {
+    this.createChildNode.emit(this.node.id);
+    this.menuVisible = false;
+  }
+
+  onDeleteCurrentNode() {
+    // À implémenter plus tard
+    console.log('delateCurretnNode event received');
+    this.menuVisible = false;
+  }
+
+  onMinimise() {
+    // À implémenter plus tard
+    console.log('minimise event received');
+    this.menuVisible = false;
+  }
+
+  @HostListener('document:mousedown', ['$event'])
+  onClickDocument(event: MouseEvent) {
+
+    if (this.menuVisible && this.menuElement.nativeElement) {
+      if (!this.menuElement.nativeElement.contains(event.target)) {
+        this.menuVisible = false;
+      }
+    }
+  
+  }
+
+  @HostListener('document:contextmenu', ['$event'])
+  onRightClickDocument(event: MouseEvent) {
+    const nodeContainerNativeEl = this.nodeContainer.nativeElement;
+    const rect = nodeContainerNativeEl.getBoundingClientRect();
+    const clickedInsideNode = nodeContainerNativeEl.contains(event.target);
+    const clickedInsideMenu = this.menuElement.nativeElement.contains(event.target);
+
+    if (clickedInsideNode && !clickedInsideMenu) {
+      event.preventDefault();  // Empêche menu natif
+      this.menuX = (event.clientX - rect.left)/this.tranfo.scale;
+      this.menuY = (event.clientY - rect.top)/this.tranfo.scale;
+      this.menuVisible = true;
+    } else if (clickedInsideMenu) {
+      event.preventDefault();
+    } else {
+      this.menuVisible = false;
+    }
+  }
+
+  updateTitle(event: FocusEvent) {
+    const input = event.target as HTMLInputElement;
+    this.node.title = input.value;
   }
 
   adjustTextAreaHeight() {
@@ -52,91 +115,16 @@ export class Node {
     ta.style.overflowY = (ta.scrollHeight > this.maxHeightTextArea) ? 'scroll' : 'hidden'; // scrollbar si débordement
   }
 
-  updateTitle(event: FocusEvent) { }
-
   updateTextArea(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.node.text = input.value;
-    this.nodeMinimised ? null : this.adjustTextAreaHeight();
+    const div = event.target as HTMLDivElement;
+    this.node.text = div.innerText; // C'est tout !
   }
 
-  onMenuAction(action: string, event: Event) {
-     // close menu on action
-    const input = event.target as HTMLInputElement;
-    switch (action) 
-    {
-      case 'newNode':
-        // Handle creating a new child node
-        this.currentNodeIdForNewChildNode.emit(this.node.id);
-        this.menuVisible = false;
-        break;
-
-      case 'color':
-        this.node.color = input.value;
-        break;
-
-      case 'MinMaximiseNode':
-        this.nodeMinimised = !this.nodeMinimised;
-
-        if (!this.nodeMinimised) {
-          setTimeout(() => {
-            this.adjustTextAreaHeight();
-          });
-        }
-        this.menuVisible = false;
-        break;
-
-      case 'delete':
-        this.menuVisible = false;
-        break;
-
-      default:
-        console.warn('Unknown action:', action);
-    }
-  }
-
-  //fort he left click
-  @HostListener('document:mousedown', ['$event'])
-  onLeftClickDocument(event: MouseEvent) {
-    this.closeMenuIfOut(event)
-    if(event.button == 2)
-    {
-      //cant prevent default context menu here because contextmenu event will be fired after
-    }  
-  }
-
-  @HostListener('document:contextmenu', ['$event'])
-  onRightClickDocument(event: MouseEvent) {
-    const clickedInsideNode = this.nodeContainer?.nativeElement.contains(event.target);
-    this.closeMenuIfOut(event)
-
-    //if the right click is inside the node prevent default and display menu
-    if (clickedInsideNode)
-    {
-      event.preventDefault();  // Prevent the browser default context menu
-      // event.stopPropagation(); 
-      this.menuX = event.clientX;
-      this.menuY = event.clientY;
-      this.menuVisible = true;
-
-    }
-  }
-
-  closeMenuIfOut(event:Event)
-  {
-    const clickedInsideMenu = this.menuElement?.nativeElement.contains(event.target); 
-    const clickedInsideColorPicker = this.colorPicker?.nativeElement.contains(event.target);
-
-    if (!clickedInsideMenu && !clickedInsideColorPicker && this.menuVisible == true) 
-    {
-      this.menuVisible = false;
-    }
-  }
 
   onMouseDown(event: MouseEvent) {
     window.dispatchEvent(new CustomEvent('nodeClicked', { detail: this.node.title }));
     const clickedElement = event.target as HTMLElement;
-    if (clickedElement.tagName === 'INPUT' || clickedElement.tagName === 'TEXTAREA'){return}
+    if (this.titleArea.nativeElement.contains(clickedElement) || this.textArea.nativeElement.contains(clickedElement)){return}
     if (this.clickIsOnHandle(event)){
       this.moving = false;
       this.resizing = true;
@@ -154,8 +142,9 @@ export class Node {
     const dx = event.clientX - this.lastX;
     const dy = event.clientY - this.lastY;
     if (this.moving){   
-      this.node.x += dx;
-      this.node.y += dy;
+      this.node.x += dx/this.tranfo.scale;
+      this.node.y += dy/this.tranfo.scale;
+      //console.log('Dragging - dx: '+dx+' dy: '+dy)
     } else if (this.resizing){
       const rect = this.nodeContainer.nativeElement.getBoundingClientRect();
       if ((this.node.width + dx) >0 && (this.node.height + dy)>0)
