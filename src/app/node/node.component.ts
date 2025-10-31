@@ -139,11 +139,12 @@ export class Node {
   }
 
   onMouseMove = (event: MouseEvent) => {
-    const dx = event.clientX - this.lastX;
-    const dy = event.clientY - this.lastY;
+    const dx = (event.clientX - this.lastX)/this.tranfo.scale;
+    const dy = (event.clientY - this.lastY)/this.tranfo.scale;
+
     if (this.moving){   
-      this.node.x += dx/this.tranfo.scale;
-      this.node.y += dy/this.tranfo.scale;
+      this.node.x += dx;
+      this.node.y += dy;
       //console.log('Dragging - dx: '+dx+' dy: '+dy)
     } else if (this.resizing){
       const rect = this.nodeContainer.nativeElement.getBoundingClientRect();
@@ -165,10 +166,11 @@ export class Node {
 
   clickIsOnHandle(event: MouseEvent) {
     const rect = this.resizinghandle.nativeElement.getBoundingClientRect();
-    const handlesize = 10; // pixels
+    const handleWidth = rect.width;
+    const handleHeight = rect.height;
 
-    const xOk = event.clientX > rect.right - handlesize && event.clientX < rect.right;
-    const yOk = event.clientY > rect.bottom - handlesize && event.clientY < rect.bottom;
+    const xOk = event.clientX >= rect.right - handleWidth && event.clientX <= rect.right;
+    const yOk = event.clientY >= rect.bottom - handleHeight && event.clientY <= rect.bottom;
     //console.log(xOk && yOk)
     return xOk && yOk
   }

@@ -351,7 +351,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     return parent;
   }
 
-  rect4Vertex(node: NodeDataModel, ctr: {x:number,y:number},ratioRect: number)
+  rect4Vertex(node: NodeDataModel, ctr: {x:number,y:number}, ratioRect: number)
   {
     const parentNd = this.getParentNode(node)
     const ctrPaNd = this.getNdCenterXY(parentNd)
@@ -441,19 +441,20 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   generateBezierPaths(node: NodeDataModel): string[] {
     const parentNode = this.getParentNode(node);
     if (!parentNode) return [];
-
+    //lets substract 4 pixels so the node cover the line edges
+    const adjust = 4;
     const parentCorners = this.getRectangleVertices(
       this.getNdCenterXY(parentNode).x,
       this.getNdCenterXY(parentNode).y,
-      parentNode.width,
-      parentNode.height
+      parentNode.width-adjust,
+      parentNode.height-adjust
     );
 
     const childCorners = this.getRectangleVertices(
       this.getNdCenterXY(node).x,
       this.getNdCenterXY(node).y,
-      node.width,
-      node.height
+      node.width-adjust,
+      node.height-adjust
     );
     const lineCoord = this.nodeLineInter(node);
     const line = new Line(lineCoord.c1.x, lineCoord.c1.y, lineCoord.c2.x, lineCoord.c2.y);
