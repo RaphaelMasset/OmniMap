@@ -7,7 +7,7 @@
         {     
             <app-node 
                 [node]="node"
-                [tranfo]="{tx: translateX, ty: translateY, scale: scale}"
+                [scale]="scale"
                 (createChildNode)="onNewChildNode($event)">
             </app-node>                      
         }

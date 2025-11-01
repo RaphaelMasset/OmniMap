@@ -7,6 +7,8 @@ export interface NodeDataModel {
   height:number;
   title: string; 
   color: string;
+  minimised?: boolean;
+  locked?: boolean;
   text?: string;
-  [key: string]: number | string | undefined; // Allow indexing by string keys
+  [key: string]: number | string | undefined | boolean; // Allow indexing by string keys
 }

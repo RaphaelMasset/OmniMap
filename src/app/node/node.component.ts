@@ -2,29 +2,29 @@ import { Component, ElementRef, HostListener, ViewChild, Input, EventEmitter, Ou
 import { CommonModule } from '@angular/common';
 import { NodeDataModel } from '../models/node-data.model';
 import { NodeMenu } from '../node-menu/node-menu';
+import { NodeText } from '../node-text/node-text';
 
-declare var marked: any;
 @Component({
   selector: 'app-node',
   standalone: true,
-  imports: [CommonModule,NodeMenu],
+  imports: [CommonModule,NodeMenu,NodeText],
   templateUrl: './node.component.html',
   styleUrls: ['./node.component.scss']
 })
 export class Node { 
   @Input() node!: NodeDataModel;
-  @Input() tranfo!: {tx: number, ty: number, scale: number};
+  @Input() scale!: number;
   
   @ViewChild('nodeContainer', { read: ElementRef }) nodeContainer!: ElementRef;
 
   @Output() createChildNode = new EventEmitter<number>();
 
   @ViewChild('titleArea') titleArea!: ElementRef;
-  @ViewChild('textArea') textArea!: ElementRef;
+  @ViewChild('textArea', { read: ElementRef }) textArea!: ElementRef;  // { read: ElementRef } when is an angular component, necessary for certain calls of methods
   @ViewChild('resizinghandle') resizinghandle!: ElementRef;
   @ViewChild('menu',{ read: ElementRef }) menuElement!: ElementRef;
 
-  nodeMinimised = false;
+
 
   menuVisible = false;
   menuX = 0;
@@ -38,17 +38,7 @@ export class Node {
 
   maxHeightTextArea = 1000;
 
-  ngAfterViewInit() 
-  {
-    //console.log(this.node.color)
-    this.nodeMinimised ? null : this.adjustTextAreaHeight();
 
-    if (this.textArea && !this.nodeMinimised) {
-      const div = this.textArea.nativeElement as HTMLDivElement;
-    }
-    console.log(this.node.text)
-    this.textArea.nativeElement.innerText = this.node.text;
-  }
 
   onSetColor(newColor: string) {
     this.node.color = newColor;
@@ -92,8 +82,8 @@ export class Node {
 
     if (clickedInsideNode && !clickedInsideMenu) {
       event.preventDefault();  // Empêche menu natif
-      this.menuX = (event.clientX - rect.left)/this.tranfo.scale;
-      this.menuY = (event.clientY - rect.top)/this.tranfo.scale;
+      this.menuX = (event.clientX - rect.left)/this.scale;
+      this.menuY = (event.clientY - rect.top)/this.scale;
       this.menuVisible = true;
     } else if (clickedInsideMenu) {
       event.preventDefault();
@@ -107,21 +97,9 @@ export class Node {
     this.node.title = input.value;
   }
 
-  adjustTextAreaHeight() {
-    if (!this.textArea) return; 
-    const ta = this.textArea.nativeElement as HTMLTextAreaElement;
-    ta.style.height = 'auto'; // reset avant recalcul
-    ta.style.height = Math.min(ta.scrollHeight, this.maxHeightTextArea) + 'px'; // limite à maxHeight
-    ta.style.overflowY = (ta.scrollHeight > this.maxHeightTextArea) ? 'scroll' : 'hidden'; // scrollbar si débordement
-  }
-
-  updateTextArea(event: Event) {
-    const div = event.target as HTMLDivElement;
-    this.node.text = div.innerText; // C'est tout !
-  }
-
 
   onMouseDown(event: MouseEvent) {
+    console.log('node mouse down');
     window.dispatchEvent(new CustomEvent('nodeClicked', { detail: this.node.title }));
     const clickedElement = event.target as HTMLElement;
     if (this.titleArea.nativeElement.contains(clickedElement) || this.textArea.nativeElement.contains(clickedElement)){return}
@@ -139,8 +117,8 @@ export class Node {
   }
 
   onMouseMove = (event: MouseEvent) => {
-    const dx = (event.clientX - this.lastX)/this.tranfo.scale;
-    const dy = (event.clientY - this.lastY)/this.tranfo.scale;
+    const dx = (event.clientX - this.lastX)/this.scale;
+    const dy = (event.clientY - this.lastY)/this.scale;
 
     if (this.moving){   
       this.node.x += dx;

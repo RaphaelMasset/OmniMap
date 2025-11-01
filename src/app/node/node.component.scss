@@ -7,6 +7,8 @@
   padding: 4px;
   padding-top: 8px;
   position: relative;
+
+  
 }
 
 .resizinghandle {
@@ -25,8 +27,7 @@
   pointer-events: auto; 
 }
 
-.node-container .title-area,
-.node-container .text-area {
+.node-container .title-area{
   width: 100%;
   box-sizing: border-box;
   padding: 2px;
@@ -37,21 +38,13 @@
   color: black;
 }
 
-.node-container .title-area:focus,
-.node-container .text-area:focus {
+.node-container .title-area:focus{
   outline: 1px solid rgba(0, 0, 0, 0.5);
 }
 
 .node-container .title-area {
   text-align: center;
   padding: 0px;
-}
-
-.text-area{
-  flex-grow: 1;
-  white-space: pre-wrap;
-  overflow: auto !important; 
-
 }
 
 app-node-menu {

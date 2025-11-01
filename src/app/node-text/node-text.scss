@@ -1,0 +1,25 @@
+.text-area{
+  white-space: pre-wrap;
+  max-height: 100%; 
+  height: 100%;
+  overflow: auto !important; 
+  box-sizing: border-box;
+  padding: 2px;
+  margin-top: 5px;
+  border: 0px;
+  border-radius: 3px;  
+  background-color: white;
+  color: black;
+}
+
+.text-area:focus {
+  outline: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;       /* Prendre tout l’espace restant */
+  min-height: 0;      /* nécessaire pour overflow dans flex */
+  overflow: hidden;
+}

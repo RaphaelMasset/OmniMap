@@ -18,14 +18,9 @@
     [value]="node.title"
     (mousedown)="null"
     (blur)="updateTitle($event)">
-  @if(!nodeMinimised)
-  {
-    <div 
-      #textArea
-      class="text-area"
-      contenteditable="true"
-      (input)="updateTextArea($event)"></div>
-  }
+
+    <app-node-text [hidden]="node.minimised" #textArea [node]="node"/>
+  
     <app-node-menu 
       #menu
       [hidden]="!menuVisible"
