@@ -1,43 +1,75 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { NodeDataModel } from '../models/node-data.model';
+import { Editor } from '@tiptap/core';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
+import { Node as ProsemirrorNode } from 'prosemirror-model';
 
 @Component({
   selector: 'app-node-text',
   imports: [],
-  templateUrl: './node-text.html',
-  styleUrl: './node-text.scss'
+  template: `<div #editor class="text-area og-text-area"></div>`,
+  styleUrl: './node-text.scss',
+  standalone: true
 })
-export class NodeText {
+export class NodeText implements OnInit, OnDestroy {
   @Input() node!: NodeDataModel;
-  @ViewChild('textArea') textArea!: ElementRef;
-  ngAfterViewInit() 
-  {
-    //console.log(this.node.color)
-    //this.node.minimised ? null : this.adjustTextAreaHeight();
+  @ViewChild('editor') editorElement!: ElementRef;
+  
+  editor!: Editor; // Added ! to indicate definite assignment
 
-    if (this.textArea && !this.node.minimised) {
-      const div = this.textArea.nativeElement as HTMLDivElement;
+  ngOnInit() {
+    setTimeout(() => {
+      this.initEditor();
+    });
+  }
+
+  private initEditor() {
+    this.editor = new Editor({
+      element: this.editorElement.nativeElement,
+      extensions: [
+        StarterKit.configure({
+          heading: {
+            levels: [1, 2, 3]
+          }
+        }),
+        Placeholder.configure({
+          placeholder: 'Start writing...'
+        })
+      ],
+      content: this.node.text || '',
+      editorProps: {
+        attributes: {
+          class: 'text-area',
+        },
+      },
+      onUpdate: ({ editor }) => {
+        const markdown = this.getMarkdown(editor);
+        this.node.text = markdown;
+        console.log('Updated markdown:', markdown);
+      }
+    });
+  }
+
+  private getMarkdown(editor: Editor): string {
+    const json = editor.getJSON();
+    return (json.content || []).map((node: any) => {
+      if (node.type === 'heading' && node.attrs?.level) {
+        const headingText = node.content?.[0]?.text || '';
+        return '#'.repeat(node.attrs.level) + ' ' + headingText;
+      }
+      if (node.type === 'paragraph') {
+        return (node.content || [])
+          .map((content: any) => content.text || '')
+          .join('') || '';
+      }
+      return '';
+    }).join('\n');
+  }
+
+  ngOnDestroy() {
+    if (this.editor) {
+      this.editor.destroy();
     }
-    console.log(this.node.text)
-    this.textArea.nativeElement.innerText = this.node.text;
   }
-  updateTextArea(event: Event) {
-    const div = event.target as HTMLDivElement;
-    this.node.text = div.innerText; // C'est tout !
-  }
-
-
-
 }
-
-
-/*
-  adjustTextAreaHeight() {
-    if (!this.textArea) return; 
-    const ta = this.textArea.nativeElement as HTMLTextAreaElement;
-    ta.style.height = 'auto'; // reset avant recalcul
-    ta.style.height = Math.min(ta.scrollHeight, this.maxHeightTextArea) + 'px'; // limite à maxHeight
-    ta.style.overflowY = (ta.scrollHeight > this.maxHeightTextArea) ? 'scroll' : 'hidden'; // scrollbar si débordement
-  }
-
-*/

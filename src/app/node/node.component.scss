@@ -5,10 +5,8 @@
   border-radius: 3px;
   margin: 0px;
   padding: 4px;
-  padding-top: 8px;
+  padding-top: 12px;
   position: relative;
-
-  
 }
 
 .resizinghandle {
@@ -30,25 +28,31 @@
 .node-container .title-area{
   width: 100%;
   box-sizing: border-box;
-  padding: 2px;
-  margin-top: 5px;
-  border: 0px;
+
+  padding: 0px; margin: 0px; border: none;
+  margin-bottom: 2px;
+
   border-radius: 3px;  
   background-color: white;
   color: black;
+  text-align: center;
+
 }
 
 .node-container .title-area:focus{
-  outline: 1px solid rgba(0, 0, 0, 0.5);
-}
-
-.node-container .title-area {
-  text-align: center;
-  padding: 0px;
+  outline: 1.5px solid rgba(0, 0, 0, 0.5);
 }
 
 app-node-menu {
   position: absolute; 
   z-index: +1;
+}
+
+app-node-text {
+  padding: 0px; margin: 0px; border: none;
+  overflow: hidden !important;
+  display: flex;
+  flex: 1;
+ // border: 1px solid rgb(214, 24, 24);
 }
 

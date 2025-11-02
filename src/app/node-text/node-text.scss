@@ -1,25 +1,36 @@
-.text-area{
-  white-space: pre-wrap;
-  max-height: 100%; 
-  height: 100%;
-  overflow: auto !important; 
-  box-sizing: border-box;
-  padding: 2px;
-  margin-top: 5px;
-  border: 0px;
-  border-radius: 3px;  
-  background-color: white;
+
+/*.tiptop:focus, p:focus {
+  outline: none;
+  padding: 0px; margin: 0px; border: none;
+}
+
+p:first-child {
+  margin-top: 0;
+}*/
+
+.text-area {
+  width: 100%;
+  height: 100% ;
+  padding: 0px; margin: 0px; border: none;
+  border-radius: 3px;
   color: black;
+  white-space: pre-wrap;
+  //border: 1px solid rgb(202, 173, 68);
+  background-color: white;
+
+  overflow: auto !important;
+
+  ::ng-deep { //necessary to reinjact the style after because it overrides my style otehrwise
+    .tiptap {
+      height: 100% ;
+      padding: 0px; margin: 0px; border: none;
+      p:first-child {
+        margin-top: 0; 
+      }   
+      p:last-child {
+        margin-bottom: 0;    
+      }
+    }
+  }
 }
 
-.text-area:focus {
-  outline: 1px solid rgba(0, 0, 0, 0.5);
-}
-
-:host {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;       /* Prendre tout l’espace restant */
-  min-height: 0;      /* nécessaire pour overflow dans flex */
-  overflow: hidden;
-}
