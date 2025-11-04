@@ -458,7 +458,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     console.log('lineLen: '+lineLen.toFixed(1));
     //// RATIOS & Distances for animation control points
     const ratio = 0.5;
-    const endDist = this.sigmoidLmaxOrigine(lineLen,150*ratio);
+    const endDist = this.sigmoidLmaxOrigine(lineLen,200*ratio);
     const centreBigRect = this.sigmoidLmaxOrigine(lineLen,10*ratio);
     const centreLittleRect = this.sigmoidLmaxOrigine(lineLen,20*ratio);
     const widthBigRect = this.sigmoidLmaxOrigine(lineLen,10*ratio);

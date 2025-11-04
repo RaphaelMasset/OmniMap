@@ -20,14 +20,14 @@ p:first-child {
 
   overflow: auto !important;
 
-  ::ng-deep { //necessary to reinjact the style after because it overrides my style otehrwise
+  ::ng-deep { //necessary to re-inject the style after because it overrides my style otehrwise
     .tiptap {
       height: 100% ;
       padding: 0px; margin: 0px; border: none;
-      p:first-child {
+      > :first-child {
         margin-top: 0; 
       }   
-      p:last-child {
+      > :last-child {
         margin-bottom: 0;    
       }
     }
