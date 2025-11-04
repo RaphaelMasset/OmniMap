@@ -48,7 +48,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   
   constructor() {
     const initialNode: NodeDataModel = this.createNode({id:0,parentNodeId:0,title:'origin'})
+    const node2 = this.createNode({id:1,parentNodeId:0,title:'2222'})
+    const node3 = this.createNode({id:2,parentNodeId:0,title:'3333'})
     this.nodesMap.set(initialNode.id, initialNode); // Push inside constructor
+    this.nodesMap.set(node2.id, node2); // Push inside constructor
+    this.nodesMap.set(node3.id, node3); // Push inside constructor
   }
   ngAfterViewInit() {
     this.mapOfNodescontainerNatEl = this.mapOfNodesContainer.nativeElement;
@@ -61,6 +65,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     //initialise node  then correct his height after the view is loeaded //need timeout to avoid error
     setTimeout(() => {
       this.nodesMap.get(0)!.y = this.spaceTakenHeader + 10;
+      this.nodesMap.get(1)!.y = this.spaceTakenHeader + 10;
+      this.nodesMap.get(1)!.x = 400;
+
+      this.nodesMap.get(2)!.y = this.spaceTakenHeader + 10+400;
+      this.nodesMap.get(2)!.x = 400;
     });
     
     //this.mapContainerCoordXY = { x: rect.left, y: rect.top };
@@ -351,21 +360,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     return parent;
   }
 
-  rect4Vertex(node: NodeDataModel, ctr: {x:number,y:number}, ratioRect: number)
-  {
-    const parentNd = this.getParentNode(node)
-    const ctrPaNd = this.getNdCenterXY(parentNd)
-    const ctrNd = this.getNdCenterXY(node)
-
-    const lineInterNd = this.nodeLineInter(node)
-    const line = new Line(lineInterNd.c1.x,lineInterNd.c1.y,lineInterNd.c2.x,lineInterNd.c2.y)
-
-    //console.log(parentNd.x,parentNd.y,node.x,node.y)
-    //const line = new Line(ctrPaNd.x,ctrPaNd.y,ctrNd.x,ctrNd.y)
-    //const ctr = line.getPointAtRatio(ratioLine)
-    return this.getRectangleVertices(ctr.x,ctr.y,node.width*ratioRect,node.height*ratioRect)
-  }
-
   nodeLineInter(node: NodeDataModel){
 
     const parentNd = this.getParentNode(node)
@@ -442,72 +436,54 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const parentNode = this.getParentNode(node);
     if (!parentNode) return [];
     //lets substract 4 pixels so the node cover the line edges
-    const adjust = 4;
+    const adjust = 3;
+    ///// GET starting coordinates parent
     const parentCorners = this.getRectangleVertices(
       this.getNdCenterXY(parentNode).x,
       this.getNdCenterXY(parentNode).y,
       parentNode.width-adjust,
       parentNode.height-adjust
     );
-
+    ///// GET starting coordinates child
     const childCorners = this.getRectangleVertices(
       this.getNdCenterXY(node).x,
       this.getNdCenterXY(node).y,
       node.width-adjust,
       node.height-adjust
     );
+    ///// GET VISIBLE SEGMENT INFO
     const lineCoord = this.nodeLineInter(node);
     const line = new Line(lineCoord.c1.x, lineCoord.c1.y, lineCoord.c2.x, lineCoord.c2.y);
+    const lineLen = line.getLength();
+    console.log('lineLen: '+lineLen.toFixed(1));
+    //// RATIOS & Distances for animation control points
+    const ratio = 0.5;
+    const endDist = this.sigmoidLmaxOrigine(lineLen,150*ratio);
+    const centreBigRect = this.sigmoidLmaxOrigine(lineLen,10*ratio);
+    const centreLittleRect = this.sigmoidLmaxOrigine(lineLen,20*ratio);
+    const widthBigRect = this.sigmoidLmaxOrigine(lineLen,10*ratio);
+    const widthLittleRect = this.sigmoidLmaxOrigine(lineLen,5*ratio);
+
+    ////GET PATH ENDING COORDINATES
+    let pEndChild = line.getPointAtDistance(endDist);
+    let pEndParent = line.getPointAtDistance(lineLen-endDist);
     
-    //node, distance sur la ligne des 4 poitns d'accroche, taille du rectangle d'accroche
-    const ratioGrandRect = 0.08;
-    const ratioPetitRect = 0.045;
-    const ratioDistGrandRect = 0.05;
-    const ratioDistPetitRect = 0.01;
-    const ratioFinPath = 0.4;
-    const distanceMaxAnim = 200;
-    const distanceTooLittle = 50;
-    //distance max accroche sur le segment
-    let pEndChild =  line.getPointAtRatio(ratioFinPath);
-    let pEndParent = line.getPointAtRatio(1-ratioFinPath);
+    ////GET PATHS CONTROL POINTS
 
-    let controlChildren = this.rect4Vertex(node, line.getPointAtRatio(ratioDistGrandRect), ratioGrandRect)
-      .concat(this.rect4Vertex(node, line.getPointAtRatio(ratioDistPetitRect), ratioPetitRect));
+    let ctrPtiRectCh = line.getPointAtDistance(centreLittleRect);
+    let ctrGrdRectCh = line.getPointAtDistance(centreBigRect);
+    let ctrPtiRectPa = line.getPointAtDistance(lineLen-centreLittleRect);
+    let ctrGrdRectPa = line.getPointAtDistance(lineLen-centreBigRect);
 
-    let controlParents= this.rect4Vertex(parentNode, line.getPointAtRatio(1-ratioDistPetitRect), ratioPetitRect)
-      .concat(this.rect4Vertex(parentNode, line.getPointAtRatio(1-ratioDistGrandRect), ratioGrandRect));
+    let controlChildren = this.getRectangleVertices(ctrPtiRectCh.x, ctrPtiRectCh.y, widthLittleRect, widthLittleRect)
+                  .concat(this.getRectangleVertices(ctrGrdRectCh.x, ctrPtiRectCh.y, widthBigRect, widthBigRect));
 
-    //if nodes are too for set a max
-    if (line.getLength() >= distanceMaxAnim)
-    {
-      //distance max accroche finale sur le segment
-      pEndChild = line.getPointAtDistance(ratioFinPath*distanceMaxAnim) ;
-      pEndParent = line.getPointAtDistance(line.getLength()-ratioFinPath*distanceMaxAnim);
+    let controlParents = this.getRectangleVertices(ctrGrdRectPa.x, ctrGrdRectPa.y, widthBigRect,widthBigRect)
+                 .concat(this.getRectangleVertices(ctrPtiRectPa.x, ctrPtiRectPa.y, widthLittleRect,widthLittleRect));
 
-      controlChildren = this.rect4Vertex(node, line.getPointAtDistance(distanceMaxAnim*ratioDistGrandRect), ratioGrandRect)
-        .concat(this.rect4Vertex(node, line.getPointAtDistance(distanceMaxAnim*ratioDistPetitRect), ratioPetitRect));
-
-      controlParents= this.rect4Vertex(parentNode, line.getPointAtDistance(line.getLength()-distanceMaxAnim*ratioDistPetitRect), ratioPetitRect)
-        .concat(this.rect4Vertex(parentNode, line.getPointAtDistance(line.getLength()-distanceMaxAnim*ratioDistGrandRect ), ratioGrandRect));
-    }
-
-    //if nodes are too cloe reduce control rect size even more
-    if (line.getLength() <= distanceTooLittle)
-    {
-      const lratio = (line.getLength()/distanceTooLittle)
-      pEndChild =  line.getPointAtRatio(ratioFinPath*1/lratio);
-      pEndParent = line.getPointAtRatio(1-(ratioFinPath*1/lratio));
- 
-      let controlChildren = this.rect4Vertex(node, line.getPointAtRatio(ratioDistGrandRect*lratio), ratioGrandRect*lratio)
-        .concat(this.rect4Vertex(node, line.getPointAtRatio(ratioDistPetitRect*lratio), ratioPetitRect*lratio));
-
-      let controlParents= this.rect4Vertex(parentNode, line.getPointAtRatio(1-(ratioDistPetitRect*lratio)), ratioPetitRect*lratio)
-        .concat(this.rect4Vertex(parentNode, line.getPointAtRatio(1-(ratioDistGrandRect*lratio)), ratioGrandRect*lratio));
-    }
-
+    ////FILL PATH COORD ARRAY
     let paths: string[] = [];
-
-    // 4 courbes partant du parent → vers 30 %
+    //parent paths
     for (let i = 0; i < 2; i++) {
       const start = parentCorners[i];
       const ctrl1 = controlParents[i];
@@ -519,7 +495,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       paths.push(`M ${start.x},${start.y} C ${ctrl1.x},${ctrl1.y} ${ctrl2.x},${ctrl2.y} ${midPt.x},${midPt.y} C ${ctrl4.x},${ctrl4.y} ${ctrl3.x},${ctrl3.y} ${end.x},${end.y} Z`);
     }
 
-    // 4 courbes partant de l'enfant → vers 70 %
+    //child paths
     for (let i = 0; i < 2; i++) {
       const start = childCorners[i];
       const ctrl1 = controlChildren[i];
@@ -530,8 +506,44 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       const end = childCorners[i+2];
       paths.push(`M ${start.x},${start.y} C ${ctrl1.x},${ctrl1.y} ${ctrl2.x},${ctrl2.y} ${midPt.x},${midPt.y} C ${ctrl4.x},${ctrl4.y} ${ctrl3.x},${ctrl3.y} ${end.x},${end.y} Z`);
     }
+       // 4 courbes partant de l'enfant → vers 70 %
+    /*for (let i = 0; i < 2; i++) {
+      const start = childCorners[i];
+      const ctrl1 = controlChildren2[i];
+      const ctrl2 = controlChildren2[i + 4];
+      const midPt = pEndChild2;
+      const ctrl3 = controlChildren2[i+2];
+      const ctrl4 = controlChildren2[i + 6];
+      const end = childCorners[i+2];
+      paths.push(`M ${start.x},${start.y} C ${ctrl1.x},${ctrl1.y} ${ctrl2.x},${ctrl2.y} ${midPt.x},${midPt.y} C ${ctrl4.x},${ctrl4.y} ${ctrl3.x},${ctrl3.y} ${end.x},${end.y} Z`);
+    }*/
 
     return paths;
+  }
+
+//David - prenom
+  sigmoidLmax(x: number, max:number = 200, slope:number = 0.02): number {
+    //https://www.desmos.com/calculator/khgcbg8xx6
+    const inflexionPoint = 4/slope; // Point d'inflexion fucntion de la pente pour que l'origine reste ~ 0
+    const exponent = -slope * (x - inflexionPoint);
+    const logisticPart = max / (1 + Math.exp(exponent));
+
+    const xZeroCorrection = max / (1+ Math.exp(4));
+    return logisticPart - xZeroCorrection;
+  }
+
+  sigmoidLmaxOrigine(
+    x: number,
+    max: number = 200,
+    pente: number = 0.02,
+    inflex: number = 20
+  ): number {
+    //sigmoid corrige pour passer par l'origine
+    //https://www.desmos.com/calculator/khgcbg8xx6
+    const logisticPart = 1 / (1 + Math.exp(-pente * (x - inflex)));
+    const logisticAtZero = 1 / (1 + Math.exp(pente * inflex));
+    const corrected = (logisticPart - logisticAtZero) / (1 - logisticAtZero);
+    return max * corrected;
   }
 
   ngOnDestroy() {
@@ -540,5 +552,5 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     window.removeEventListener('mouseup', this.upListener);
 
     this.mapOfNodescontainerNatEl.removeEventListener('wheel', this.wheelListener);
-  }
+  } 
 }

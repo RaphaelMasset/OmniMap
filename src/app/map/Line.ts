@@ -36,6 +36,11 @@ export class Line {
     const y = this.y1 + (this.y2 - this.y1) * t;
     return { x, y };
   }
+
+  /**
+   * @param line distance 
+   * @returns coordinate x,y at given distance
+   */
   getPointAtDistance(distance: number): { x: number; y: number } {
     // Calcul de la longueur totale de la ligne
     const dx = this.x2 - this.x1;

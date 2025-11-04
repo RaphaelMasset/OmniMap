@@ -19,40 +19,46 @@
             @if(node.id != 0)
             {       
                 <line         
-                    [attr.x1]="getNdCenterXY(node).x"
-                    [attr.y1]="getNdCenterXY(node).y"
-                    [attr.x2]="getNdCenterXY(getParentNode(node)).x"
-                    [attr.y2]="getNdCenterXY(getParentNode(node)).y"
-                    [attr.stroke]="node.color" 
-                    stroke-width="2" />
+                [attr.x1]="getNdCenterXY(node).x"
+                [attr.y1]="getNdCenterXY(node).y"
+                [attr.x2]="getNdCenterXY(getParentNode(node)).x"
+                [attr.y2]="getNdCenterXY(getParentNode(node)).y"
+                [attr.stroke]="node.color" 
+                stroke-width="2" />
 
                 @for (i of iterationBezier; track i) {
                     <path
-                        [attr.d]="generateBezierPaths(node)[i]"
-                        [attr.fill]="node.color"
-                        fill-rule="evenodd"
-                        [attr.stroke]="node.color"
-                        stroke-width="2"
-                        />
-                }
+                    [attr.d]="generateBezierPaths(node)[i]"
+                    [attr.fill]="node.color"                      
+                    [attr.stroke]="node.color"
+                    stroke-width="1"/>
+                }    
             }
         }    
         @empty {
-        No items available
+            No items available
         }
         </g>
     </svg>   
 </div>
 
 
-    <!-- 
-        <path [attr.d]="`M 100,200 C 200,200 200,100 300,100`" stroke="blue" stroke-width="1" fill="transparent"/>
-
-        <line x1="100" y1="100" x2="850" y2="100" style="stroke:red;stroke-width:1" />
-        <circle r="100" cx="100" cy="100" fill="gray" stroke="black" stroke-width="1" opacity="0.5" />
-        <circle r="112" cx="100" cy="100" fill="none" stroke="black" stroke-width="1" opacity="0.5" />
-        <rect x="0" y="0" width="200" height="200"
-            fill="none"
-            stroke="black"
-            stroke-width="1" />
-    -->
+<!-- 
+<circle r="2" [attr.cx]="getAnimChCoord(node).end.x" [attr.cy]="getAnimChCoord(node).end.y" stroke="red" stroke-width="1" fill="none"/>
+                    
+<circle r="1" [attr.cx]="getAnimChCoord(node).cPr.x"     [attr.cy]="getAnimChCoord(node).cPr.y"     stroke="red" stroke-width="1" fill="none"/>    
+<polyline 
+[attr.points]="
+    `${getAnimChCoord(node).ctrl[0].x},${getAnimChCoord(node).ctrl[0].y} ` +
+    `${getAnimChCoord(node).ctrl[1].x},${getAnimChCoord(node).ctrl[1].y} ` + 
+    `${getAnimChCoord(node).ctrl[2].x},${getAnimChCoord(node).ctrl[2].y}`" 
+    style="fill:none;stroke:red;stroke-width:0.5" />
+                    
+<circle r="0.5" [attr.cx]="getAnimChCoord(node).cGr.x"     [attr.cy]="getAnimChCoord(node).cGr.y"     stroke="red" stroke-width="1"fill="none"/>     
+<polyline 
+[attr.points]="
+    `${getAnimChCoord(node).ctrl[4].x},${getAnimChCoord(node).ctrl[4].y} ` +
+    `${getAnimChCoord(node).ctrl[5].x},${getAnimChCoord(node).ctrl[5].y} ` + 
+    `${getAnimChCoord(node).ctrl[6].x},${getAnimChCoord(node).ctrl[6].y}`" 
+    style="fill:none;stroke:red;stroke-width:1" />
+-->
