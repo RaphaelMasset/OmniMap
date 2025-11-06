@@ -4,6 +4,7 @@ import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
+import { Markdown } from '@tiptap/markdown'
 
 @Component({
   selector: 'app-node-text',
@@ -56,9 +57,8 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
             levels: [1, 2, 3]
           }
         }),
-        Image.configure({
-              inline: true, // This makes images render inline with text
-            }),
+        Image,
+        Markdown,
         Placeholder.configure({
           placeholder: 'Start writing...'
         })
@@ -71,9 +71,13 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
       },
       onUpdate: ({ editor }) => {
         //this.JSONtester(editor);
-
+        console.log('editor.getJSON()',editor.getJSON())
+        console.log('MD',this.editor.getMarkdown())
+        const md = this.editor.getMarkdown();
+        const matches = Array.from(md.matchAll(this.markdownImageRegex), m => m[0]);
+        console.log(matches.length)
         this.node.text = JSON.stringify(editor.getJSON());
-        console.log('node.text apres modification du node',this.node.text)
+        //console.log('node.text apres modification du node',this.node.text)
       }
     });
 
