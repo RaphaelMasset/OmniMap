@@ -16,6 +16,12 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
   @Input() node!: NodeDataModel;
   @Input() scale!: number;
   @ViewChild('editor') editorElement!: ElementRef;
+
+  markdownImageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+
+  //<img src="https://placehold.co/600x400" alt="exemple" />
+  //![image](bezier-anim-controlpoints.jpg)
+  //![image](https://placehold.co/600x400)
   
   editor!: Editor; // Added ! to indicate definite assignment
 
@@ -50,7 +56,9 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
             levels: [1, 2, 3]
           }
         }),
-        Image,
+        Image.configure({
+              inline: true, // This makes images render inline with text
+            }),
         Placeholder.configure({
           placeholder: 'Start writing...'
         })
@@ -70,15 +78,7 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
     });
 
   }
-  JSONtester(txt: any){
-    if (!txt ) {
-      txt = ' ';
-    }
-    console.log('JSONstringify:', JSON.stringify(txt));  
-    console.log('JSONstringify X 2:', JSON.stringify(JSON.stringify(txt)));   
-    console.log('JSON.parse', JSON.parse(txt));
-    console.log('JSON.parse X 2', JSON.parse(JSON.parse(txt)));
-  }
+
 
 
   ngOnDestroy() {
