@@ -9,6 +9,6 @@ export interface NodeDataModel {
   color: string;
   minimised?: boolean;
   locked?: boolean;
-  text?: string;
+  text?: string ;
   [key: string]: number | string | undefined | boolean; // Allow indexing by string keys
 }

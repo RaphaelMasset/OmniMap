@@ -1,9 +1,9 @@
-import { Component, ElementRef, Input, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { NodeDataModel } from '../models/node-data.model';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Node as ProsemirrorNode } from 'prosemirror-model';
+import Image from '@tiptap/extension-image';
 
 @Component({
   selector: 'app-node-text',
@@ -12,8 +12,9 @@ import { Node as ProsemirrorNode } from 'prosemirror-model';
   styleUrl: './node-text.scss',
   standalone: true
 })
-export class NodeText implements OnInit, OnDestroy {
+export class NodeText implements OnInit, OnDestroy, OnChanges {
   @Input() node!: NodeDataModel;
+  @Input() scale!: number;
   @ViewChild('editor') editorElement!: ElementRef;
   
   editor!: Editor; // Added ! to indicate definite assignment
@@ -24,7 +25,23 @@ export class NodeText implements OnInit, OnDestroy {
     });
   }
 
-  private initEditor() {
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['node']) {
+      const nodeChange = changes['node'];
+      if (nodeChange.previousValue && nodeChange.currentValue) {
+        if (nodeChange.previousValue.text !== nodeChange.currentValue.text) {
+          //console.log('node.text changed from:', nodeChange.previousValue.text);
+          //console.log('node.text changed to:', nodeChange.currentValue.text);
+      
+          const jsonObject = this.node.text ? JSON.parse(this.node.text) : '';
+          console.log('node.text parsed',this.node.text ? JSON.parse(this.node.text) : 'this.node.text est nullish')
+          this.editor.commands.setContent(jsonObject);
+        }
+      }
+    }
+  }
+
+  private initEditor() { 
     this.editor = new Editor({
       element: this.editorElement.nativeElement,
       extensions: [
@@ -33,39 +50,36 @@ export class NodeText implements OnInit, OnDestroy {
             levels: [1, 2, 3]
           }
         }),
+        Image,
         Placeholder.configure({
           placeholder: 'Start writing...'
         })
-      ],
-      content: this.node.text || '',
+      ], 
+      content: this.node.text ? JSON.parse(this.node.text) : '', //CSV read do a first parsing but we need to do a second one
       editorProps: {
         attributes: {
           class: 'text-area',
         },
       },
       onUpdate: ({ editor }) => {
-        const markdown = this.getMarkdown(editor);
-        this.node.text = markdown;
-        console.log('Updated markdown:', markdown);
+        //this.JSONtester(editor);
+
+        this.node.text = JSON.stringify(editor.getJSON());
+        console.log('node.text apres modification du node',this.node.text)
       }
     });
+
+  }
+  JSONtester(txt: any){
+    if (!txt ) {
+      txt = ' ';
+    }
+    console.log('JSONstringify:', JSON.stringify(txt));  
+    console.log('JSONstringify X 2:', JSON.stringify(JSON.stringify(txt)));   
+    console.log('JSON.parse', JSON.parse(txt));
+    console.log('JSON.parse X 2', JSON.parse(JSON.parse(txt)));
   }
 
-  private getMarkdown(editor: Editor): string {
-    const json = editor.getJSON();
-    return (json.content || []).map((node: any) => {
-      if (node.type === 'heading' && node.attrs?.level) {
-        const headingText = node.content?.[0]?.text || '';
-        return '#'.repeat(node.attrs.level) + ' ' + headingText;
-      }
-      if (node.type === 'paragraph') {
-        return (node.content || [])
-          .map((content: any) => content.text || '')
-          .join('') || '';
-      }
-      return '';
-    }).join('\n');
-  }
 
   ngOnDestroy() {
     if (this.editor) {

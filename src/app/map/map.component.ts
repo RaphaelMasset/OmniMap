@@ -17,6 +17,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   mapContainerCoordXY = { x: 0, y: 0 };
   defaultNodeDim = { w: 100, h: 100 };
   iterationBezier = Array.from({ length: 8 }, (_, i) => i);
+
   @ViewChild('mapOfNodesContainer') mapOfNodesContainer!: ElementRef;
   @ViewChild('mapHeader', { read: ElementRef }) header!: ElementRef;
   @ViewChild('fileInput', { read: ElementRef }) fileInput!: ElementRef;
@@ -73,9 +74,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     });
     
     //this.mapContainerCoordXY = { x: rect.left, y: rect.top };
-    console.log('Header height: '+this.spaceTakenHeader)
+   // console.log('Header height: '+this.spaceTakenHeader)
     
-
     const containerRect = this.mapOfNodescontainerNatEl.getBoundingClientRect();
     this.mapContainerCoordXY = { x: containerRect.left, y: containerRect.top };
 
@@ -103,15 +103,36 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     return false;
   }
 
+  /**
+   * Use node map to write a CSV file and trigger download
+   */
   writeCsv(){
     //create a list of header by getting the keys of hte node object
     const headers = Object.keys(this.nodesMap.get(0) || {});
     //conver teh map of objet to a list of object
     const nodeArray = this.nodesMapToArray;
-
-    const csvRows = [
+    /*
+    {\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\n",\n"text\":\n"qqqq\"}]}]}
+    */
+      const csvRows = [
       headers.join(','), // ligne d'entête
-      ...nodeArray.map(node => headers.map(header => JSON.stringify(node[header] ?? '')).join(',') // ligne de données pour chaque noeud
+      ...nodeArray.map(node =>
+        headers.map(header =>{         
+          if(header==='text'){
+            //console.log(node[header])
+            //console.log(btoa(node[header] ?? ''))
+            //console.log(btoa(unescape(encodeURIComponent(node[header] ?? ''))))
+            //console.log(JSON.stringify(node[header] ?? ''))
+            //convertit une chaîne UTF-8 en ASCII sûr pour btoa() en encodant d’abord les caractères multioctets (encodeURIComponent) puis en les ramenant en texte brut (unescape).
+            console.log(node[header] ?? '');
+            console.log(btoa(unescape(encodeURIComponent(node[header] ?? ''))))
+            console.log(decodeURIComponent(escape(atob(btoa(unescape(encodeURIComponent(node[header] ?? '')))))))
+            return btoa(unescape(encodeURIComponent(node[header] ?? ''))); //encoding base 64 eviter prb avec les escape char a la lecture 
+          }else{
+            return JSON.stringify(node[header] ?? '')
+          }
+          
+        }).join(',') // ligne de données pour chaque noeud
       )
     ];
     //csvRows.forEach(e=> console.log(e))
@@ -136,7 +157,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     // Formate l'heureMinute hhmm
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
-    console.log('writeCsv - minutes: '+minutes)
+    //console.log('writeCsv - minutes: '+minutes)
 
     // Compose le nom du fichier (sans caractères interdits comme /)
     const fileName = `OmniMap_${year}-${month}-${day}_${hours}:${minutes}.csv`;
@@ -154,9 +175,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   uploadCsv(){
+    // the file imput HTML elemt is style="display: none;" so we programmatically click on it when the event occur
     this.fileInput.nativeElement.click();
-    console.log("uploadCsv()")
+    //console.log("uploadCsv()")
   }
+
   onFileSelected(event: Event){ 
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) {
@@ -181,9 +204,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   readCsvFile(file: File) {
     const reader = new FileReader();
-    console.log('readCsvFile before .onload')
+    //console.log('readCsvFile before .onload')
     reader.onload = () => {
-      console.log('readCsvFile inside .onload')
+      //console.log('readCsvFile inside .onload')
       const csvText = reader.result as string;
       const lines = csvText.split('\n');  //CSV text string into an array of lines
       this.nodesMap = this.csvToMapWithHeader(lines)
@@ -202,7 +225,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     //get header index and return the string at this index for the given line
     function getValue(columns: string[], name: string): string | undefined {
       const index = header.indexOf(name);
+      //console.log(columns[index])
       if (index === -1) return undefined;
+      //if (name === 'text')console.log('getValue',stripQuotes(columns[index]))
       return stripQuotes(columns[index]);
     }
 
@@ -219,7 +244,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
       const idStr = getValue(nodeIValues, 'id');
       if (!idStr){
-        console.log('line '+i+' id is invalid-skip')
+        //console.log('line '+i+' id is invalid-skip')
         continue;
       }  // Skip invalid lines
       //console.log(nodeIValues)
@@ -233,9 +258,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         height: Number(getValue(nodeIValues, 'height')),
         title: getValue(nodeIValues, 'title') || '',
         color: getValue(nodeIValues, 'color') || '',
-        text: getValue(nodeIValues, 'text'),
+        text: decodeURIComponent(escape(atob(getValue(nodeIValues, 'text') || ''))),
+        //text: atob(getValue(nodeIValues, 'text') || ''),
       })
-    
+      console.log('node.text apres lecture csv',nodeI.text)
       nodeMap.set(nodeI.id, nodeI);
     }
     return nodeMap;
@@ -455,7 +481,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const lineCoord = this.nodeLineInter(node);
     const line = new Line(lineCoord.c1.x, lineCoord.c1.y, lineCoord.c2.x, lineCoord.c2.y);
     const lineLen = line.getLength();
-    console.log('lineLen: '+lineLen.toFixed(1));
+
     //// RATIOS & Distances for animation control points
     const ratio = 0.5;
     const endDist = this.sigmoidLmaxOrigine(lineLen,200*ratio);

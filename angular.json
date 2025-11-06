@@ -38,6 +38,7 @@
               }
             ],
             "styles": [
+              "node_modules/easymde/dist/easymde.min.css",
               "src/styles.scss"
             ]
           },

@@ -7,7 +7,7 @@ import { NodeText } from '../node-text/node-text';
 @Component({
   selector: 'app-node',
   standalone: true,
-  imports: [CommonModule,NodeMenu,NodeText],
+  imports: [CommonModule, NodeMenu, NodeText],
   templateUrl: './node.component.html',
   styleUrls: ['./node.component.scss']
 })
@@ -99,7 +99,7 @@ export class Node {
 
 
   onMouseDown(event: MouseEvent) {
-    console.log('node mouse down');
+    //console.log('node mouse down');
     window.dispatchEvent(new CustomEvent('nodeClicked', { detail: this.node.title }));
     const clickedElement = event.target as HTMLElement;
     if (this.titleArea.nativeElement.contains(clickedElement) || this.textArea.nativeElement.contains(clickedElement)){return}

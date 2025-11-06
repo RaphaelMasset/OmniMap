@@ -12,6 +12,7 @@
   [style.height.px]="node.height">  
   <input 
     #titleArea
+    pattern="[\x00-\x7F]*"
     type="text" 
     placeholder="Title"  
     class="title-area"
@@ -19,7 +20,11 @@
     (mousedown)="null"
     (blur)="updateTitle($event)">
 
-    <app-node-text [hidden]="node.minimised" #textArea [node]="node"/>
+    <app-node-text 
+    [hidden]="node.minimised" 
+    #textArea 
+    [node]="node"
+    [scale]="scale"/>
   
     <app-node-menu 
       #menu
