@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { NodeDataModel } from '../models/node-data.model';
+import { NodeDataModel } from '../model_service_utils/node-data.model';
 
 @Component({
   selector: 'app-node-menu',

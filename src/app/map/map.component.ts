@@ -1,9 +1,9 @@
 import { QueryList, AfterViewInit,HostListener, Component, OnDestroy, ViewChild, ViewChildren, ElementRef  } from '@angular/core';
 import { CommonModule} from  '@angular/common';
 import { Node } from '../node/node.component';
-import { NodeDataModel } from '../models/node-data.model';
+import { NodeDataModel } from '../model_service_utils/node-data.model';
 import { HeaderComponent } from '../header/header.component';
-import { Line } from './Line';
+import { Line } from '../model_service_utils/Line';
 
 @Component({
   selector: 'app-map',

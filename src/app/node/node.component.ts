@@ -1,6 +1,6 @@
 import { Component, ElementRef, HostListener, ViewChild, Input, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NodeDataModel } from '../models/node-data.model';
+import { NodeDataModel } from '../model_service_utils/node-data.model';
 import { NodeMenu } from '../node-menu/node-menu';
 import { NodeText } from '../node-text/node-text';
 
@@ -92,17 +92,25 @@ export class Node {
     }
   }
 
-  updateTitle(event: FocusEvent) {
+  updateTitle(event: Event) {
     const input = event.target as HTMLInputElement;
     this.node.title = input.value;
+    this.sendTitle()
+  }
+
+  sendTitle(){
+    window.dispatchEvent(new CustomEvent('nodeClicked', { detail: this.node.title }));
   }
 
 
   onMouseDown(event: MouseEvent) {
-    //console.log('node mouse down');
-    window.dispatchEvent(new CustomEvent('nodeClicked', { detail: this.node.title }));
+    //send clicked node title to
+    this.sendTitle()
     const clickedElement = event.target as HTMLElement;
-    if (this.titleArea.nativeElement.contains(clickedElement) || this.textArea.nativeElement.contains(clickedElement)){return}
+    //dont drag or resize if title or textArea or Menu clicked
+    if (this.titleArea.nativeElement.contains(clickedElement) ||
+      this.textArea.nativeElement.contains(clickedElement) 
+      ){return}
     if (this.clickIsOnHandle(event)){
       this.moving = false;
       this.resizing = true;

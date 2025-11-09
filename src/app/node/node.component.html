@@ -18,7 +18,7 @@
     class="title-area"
     [value]="node.title"
     (mousedown)="null"
-    (blur)="updateTitle($event)">
+    (input)="updateTitle($event)">
 
     <app-node-text 
     [hidden]="node.minimised" 
@@ -26,17 +26,18 @@
     [node]="node"
     [scale]="scale"/>
   
-    <app-node-menu 
-      #menu
-      [hidden]="!menuVisible"
-      [node]="node"
-      [style.left.px]="menuX"
-      [style.top.px]="menuY"
-      (setColor)="onSetColor($event)"
-      (newChildNode)="onNewChildNode()"
-      (delateCurretnNode)="onDeleteCurrentNode()"
-      (minimise)="onMinimise()">
-    </app-node-menu>
+
 
   <div #resizinghandle class="resizinghandle" ></div>
 </div>
+<app-node-menu 
+  #menu
+  [hidden]="!menuVisible"
+  [node]="node"
+  [style.left.px]="menuX"
+  [style.top.px]="menuY"
+  (setColor)="onSetColor($event)"
+  (newChildNode)="onNewChildNode()"
+  (delateCurretnNode)="onDeleteCurrentNode()"
+  (minimise)="onMinimise()">
+</app-node-menu>
