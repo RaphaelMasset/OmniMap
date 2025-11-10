@@ -11,10 +11,12 @@ import { NodeDataModel } from '../model_service_utils/node-data.model';
 export class NodeMenu {
   @Input() node!: NodeDataModel;
 
-  @Output() evSetColor = new EventEmitter<string>();
   @Output() evNewChildNode = new EventEmitter<void>();
   @Output() evDeleteNode = new EventEmitter<void>();
-  @Output() evMinimise = new EventEmitter<void>();
+
+  opacity:number = 1;
+  titleMinimised = false;
+  textMinimised = false;
 
   onMenuAction(action: string, event: Event) {
     // close menu on action
@@ -27,11 +29,15 @@ export class NodeMenu {
         break;
 
       case 'color':
-        this.evSetColor.emit(input.value);
+        this.node.color = input.value;
         break;
 
-      case 'MinMaximiseNode':
-        this.evMinimise.emit();
+      case 'MinMaximiseTitle':
+        this.node.titleMinimized = !this.node.titleMinimized;
+        break;
+
+      case 'MinMaximiseContent':
+        this.node.contentMinimized = !this.node.contentMinimized;
         break;
 
       case 'delete':

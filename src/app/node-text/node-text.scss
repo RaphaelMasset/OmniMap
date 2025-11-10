@@ -1,3 +1,7 @@
+//“If the host element has the hidden attribute, don’t display it.”
+:host([hidden]) {
+  display: none !important;
+}
 
 .text-area {
   width: 100%;

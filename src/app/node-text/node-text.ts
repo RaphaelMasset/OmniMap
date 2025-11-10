@@ -10,7 +10,7 @@ import { Plugin } from 'prosemirror-state';
 @Component({
   selector: 'app-node-text',
   imports: [],
-  template: `<div #editor class="text-area og-text-area"></div>`,
+  template: `<div #editor class="text-area"></div>`,
   styleUrl: './node-text.scss',
   standalone: true
 })

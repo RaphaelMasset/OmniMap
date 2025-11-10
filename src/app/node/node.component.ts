@@ -37,8 +37,6 @@ export class Node {
 
   maxHeightTextArea = 1000;
 
-
-
   onSetColor(newColor: string) {
     this.node.color = newColor;
    // this.menuVisible = false;

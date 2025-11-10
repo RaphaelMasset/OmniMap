@@ -14,6 +14,7 @@ class="node-container"
   #titleArea
   pattern="[\x00-\x7F]*"
   type="text" 
+  [hidden]="node.titleMinimized" 
   placeholder="Title"  
   class="title-area"
   [value]="node.title"
@@ -21,7 +22,7 @@ class="node-container"
   (input)="updateTitle($event)">
 
   <app-node-text 
-  [hidden]="node.minimised" 
+  [hidden]="node.contentMinimized" 
   #textArea 
   [node]="node"
   [scale]="scale"/>
@@ -31,7 +32,6 @@ class="node-container"
   [node]="node"
   [style.left.px]="menuX"
   [style.top.px]="menuY"
-  (evSetColor)="onSetColor($event)"
   (evNewChildNode)="onNewChildNode()"
   (evDeleteNode)="onDeleteCurrentNode()"
   (evMinimise)="onMinimise()">

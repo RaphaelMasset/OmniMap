@@ -7,7 +7,9 @@ export interface NodeDataModel {
   height:number;
   title: string; 
   color: string;
-  minimised?: boolean;
+  opacity?: number;
+  titleMinimized?: boolean;
+  contentMinimized?: boolean;
   locked?: boolean;
   text?: string ;
   [key: string]: number | string | undefined | boolean; // Allow indexing by string keys
