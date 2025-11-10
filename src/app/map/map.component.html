@@ -8,7 +8,8 @@
             <app-node 
                 [node]="node"
                 [scale]="scale"
-                (createChildNode)="onNewChildNode($event)">
+                (evNewChildNode)="onNewChildNode($event)"
+                (evDeleteNode)="onDeleteNode($event)">
             </app-node>                      
         }
     </div>             

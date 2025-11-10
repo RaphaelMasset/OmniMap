@@ -1,43 +1,40 @@
 <!-- node.html -->
 <div 
-  #nodeContainer
-  class="node-container" 
-  [style.background-color]="node.color"
-  [style.color]="node.color"
-  (mousedown)="onMouseDown($event)"
-  [style.position]="'absolute'"
-  [style.left.px]="node.x"
-  [style.top.px]="node.y"
-  [style.width.px]="node.width"
-  [style.height.px]="node.height">  
+#nodeContainer
+class="node-container" 
+[style.background-color]="node.color"
+[style.color]="node.color"
+(mousedown)="onMouseDown($event)"
+[style.position]="'absolute'"
+[style.left.px]="node.x"
+[style.top.px]="node.y"
+[style.width.px]="node.width"
+[style.height.px]="node.height">  
   <input 
-    #titleArea
-    pattern="[\x00-\x7F]*"
-    type="text" 
-    placeholder="Title"  
-    class="title-area"
-    [value]="node.title"
-    (mousedown)="null"
-    (input)="updateTitle($event)">
+  #titleArea
+  pattern="[\x00-\x7F]*"
+  type="text" 
+  placeholder="Title"  
+  class="title-area"
+  [value]="node.title"
+  (mousedown)="null"
+  (input)="updateTitle($event)">
 
-    <app-node-text 
-    [hidden]="node.minimised" 
-    #textArea 
-    [node]="node"
-    [scale]="scale"/>
-  
-
-
-  <div #resizinghandle class="resizinghandle" ></div>
-</div>
-<app-node-menu 
+  <app-node-text 
+  [hidden]="node.minimised" 
+  #textArea 
+  [node]="node"
+  [scale]="scale"/>
+  <app-node-menu 
   #menu
   [hidden]="!menuVisible"
   [node]="node"
   [style.left.px]="menuX"
   [style.top.px]="menuY"
-  (setColor)="onSetColor($event)"
-  (newChildNode)="onNewChildNode()"
-  (delateCurretnNode)="onDeleteCurrentNode()"
-  (minimise)="onMinimise()">
-</app-node-menu>
+  (evSetColor)="onSetColor($event)"
+  (evNewChildNode)="onNewChildNode()"
+  (evDeleteNode)="onDeleteCurrentNode()"
+  (evMinimise)="onMinimise()">
+  </app-node-menu>
+  <div #resizinghandle class="resizinghandle" ></div>
+</div>

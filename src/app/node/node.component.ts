@@ -17,14 +17,13 @@ export class Node {
   
   @ViewChild('nodeContainer', { read: ElementRef }) nodeContainer!: ElementRef;
 
-  @Output() createChildNode = new EventEmitter<number>();
+  @Output() evNewChildNode = new EventEmitter<number>();
+  @Output() evDeleteNode = new EventEmitter<number>();
 
   @ViewChild('titleArea') titleArea!: ElementRef;
   @ViewChild('textArea', { read: ElementRef }) textArea!: ElementRef;  // { read: ElementRef } when is an angular component, necessary for certain calls of methods
   @ViewChild('resizinghandle') resizinghandle!: ElementRef;
   @ViewChild('menu',{ read: ElementRef }) menuElement!: ElementRef;
-
-
 
   menuVisible = false;
   menuX = 0;
@@ -46,13 +45,12 @@ export class Node {
   }
 
   onNewChildNode() {
-    this.createChildNode.emit(this.node.id);
+    this.evNewChildNode.emit(this.node.id);
     this.menuVisible = false;
   }
 
   onDeleteCurrentNode() {
-    // À implémenter plus tard
-    console.log('delateCurretnNode event received');
+    this.evDeleteNode.emit(this.node.id);
     this.menuVisible = false;
   }
 
@@ -109,7 +107,8 @@ export class Node {
     const clickedElement = event.target as HTMLElement;
     //dont drag or resize if title or textArea or Menu clicked
     if (this.titleArea.nativeElement.contains(clickedElement) ||
-      this.textArea.nativeElement.contains(clickedElement) 
+      this.textArea.nativeElement.contains(clickedElement) ||
+      this.menuElement.nativeElement.contains(clickedElement) 
       ){return}
     if (this.clickIsOnHandle(event)){
       this.moving = false;

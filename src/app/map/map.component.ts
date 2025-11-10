@@ -48,7 +48,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private downListener = (event: MouseEvent) => this.onDown(event);
   
   constructor() {
-    const initialNode: NodeDataModel = this.createNode({id:0,parentNodeId:0,title:'origin'})
+    const initialNode: NodeDataModel = this.createNode({id:0,parentNodeId:-1,title:'origin'})
     const node2 = this.createNode({id:1,parentNodeId:0,title:'2222'})
     const node3 = this.createNode({id:2,parentNodeId:0,title:'3333'})
     this.nodesMap.set(initialNode.id, initialNode); // Push inside constructor
@@ -119,11 +119,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       ...nodeArray.map(node =>
         headers.map(header =>{         
           if(header==='text'){
-            //console.log(node[header])
-            //console.log(btoa(node[header] ?? ''))
-            //console.log(btoa(unescape(encodeURIComponent(node[header] ?? ''))))
-            //console.log(JSON.stringify(node[header] ?? ''))
-            //convertit une chaîne UTF-8 en ASCII sûr pour btoa() en encodant d’abord les caractères multioctets (encodeURIComponent) puis en les ramenant en texte brut (unescape).
             console.log(node[header] ?? '');
             console.log(btoa(unescape(encodeURIComponent(node[header] ?? ''))))
             console.log(decodeURIComponent(escape(atob(btoa(unescape(encodeURIComponent(node[header] ?? '')))))))
@@ -184,7 +179,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) {
       console.log("No file selected")
-      return;}
+      return;
+    }
 
     const file = input.files[0];
 
@@ -316,9 +312,69 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       y: (node.y - this.mapContainerCoordXY.y) + (node.height)/2,
     };
   }
-  onNewChildNode(event: number) {
-    this.addNewChildNodeToNodeMap(event);
+
+  onNewChildNode(nodeId: number) {
+    this.addNewChildNodeToNodeMap(nodeId);
   }
+
+  onDeleteNode(nodeId: number) {
+    
+    //prevent user from delating the last node if there is only one
+    if (nodeId == 0){
+      alert('You need at least one node to create new ones');
+      return
+    }
+
+    if (!this.nodesMap.has(nodeId)) {
+      // if the node dont exist we return an error
+      alert('Indexation error, this nodeId does not exist');
+      return;
+    }
+
+    const nodeToDelete = this.nodesMap.get(nodeId)!;
+    let userConfirmedNdAndChildDel = false;
+    //check if this node exist 
+    const hasChildren = [...this.nodesMap.values()].some(node => node.parentNodeId === nodeToDelete.id);
+    const userConfirmedNdDel = confirm('Proceeding will erase the current node are you sure ?');
+    if (userConfirmedNdDel) {
+      //check if the node have children, if yes ask if you want to delate them
+      if (hasChildren){
+        userConfirmedNdAndChildDel = confirm('Do you also want to delete children of this node ?');
+        //only loop if the node have children
+        for (const node of this.nodesMap.values()) {
+          //if we find children we replace their parent node id with the delated node parent node id or we delate them
+          if (node.parentNodeId == nodeId) {
+            if (userConfirmedNdAndChildDel){
+              this.recursivDeletion(node.id)
+            }
+            else{
+              node.parentNodeId = nodeToDelete.parentNodeId;
+            }
+          }
+        }
+      }
+      //then we delate the targeted node
+      this.nodesMap.delete(nodeId)
+    //if the user refuse to delate we return null
+    } else {
+      return
+    }
+  }
+
+ /* getParentIdList(){
+    const ids: number[] = Array.from(this.nodesMap.values(), v => v.id);
+    return ids
+  }*/
+
+  recursivDeletion(id:number){
+    for (const node of this.nodesMap.values()) {
+      if (node.parentNodeId == id) {
+        this.recursivDeletion(node.id)
+      }
+    }  //on envoi 1 -> on toruve le node 2 et trois qui on 1 en parent et on recurse// sur 2 et trois on trouve pas d'enfant alors on les delate et ensuite on delate 1
+    this.nodesMap.delete(id) 
+  }
+
   private onDown = (event: MouseEvent) => {
     if (this.isEventInsideOneNode(event) || (event.button === 2)) {
       return;

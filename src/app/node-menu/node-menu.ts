@@ -11,36 +11,35 @@ import { NodeDataModel } from '../model_service_utils/node-data.model';
 export class NodeMenu {
   @Input() node!: NodeDataModel;
 
-  @Output() setColor = new EventEmitter<string>();
-  @Output() newChildNode = new EventEmitter<void>();
-  @Output() delateCurretnNode = new EventEmitter<void>();
-  @Output() minimise = new EventEmitter<void>();
+  @Output() evSetColor = new EventEmitter<string>();
+  @Output() evNewChildNode = new EventEmitter<void>();
+  @Output() evDeleteNode = new EventEmitter<void>();
+  @Output() evMinimise = new EventEmitter<void>();
 
   onMenuAction(action: string, event: Event) {
-     // close menu on action
+    // close menu on action
     console.log('onMenuAction')
     const input = event.target as HTMLInputElement;
     switch (action) 
     {
       case 'newNode':
-        this.newChildNode.emit();
+        this.evNewChildNode.emit();
         break;
 
       case 'color':
-        this.setColor.emit(input.value);
+        this.evSetColor.emit(input.value);
         break;
 
       case 'MinMaximiseNode':
-        this.minimise.emit();
+        this.evMinimise.emit();
         break;
 
       case 'delete':
-        this.delateCurretnNode.emit();
+        this.evDeleteNode.emit();
         break;
 
       default:
         console.warn('Unknown action:', action);
     }
   }
-
 }
