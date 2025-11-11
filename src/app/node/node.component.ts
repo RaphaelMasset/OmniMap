@@ -62,6 +62,7 @@ export class Node {
   
   onEditHiddenTree() {
     this.evEditHiddenTree.emit(this.node.id);
+    this.sendInfoForHeader()
   }
   onMinimise() {
     console.log('minimise event received');
@@ -101,17 +102,17 @@ export class Node {
   updateTitle(event: Event) {
     const input = event.target as HTMLInputElement;
     this.node.title = input.value;
-    this.sendTitle()
+    this.sendInfoForHeader()
   }
 
-  sendTitle(){
-    window.dispatchEvent(new CustomEvent('nodeClicked', { detail: this.node.title }));
+  sendInfoForHeader(){
+    window.dispatchEvent(new CustomEvent('nodeClicked', { detail: {title: this.node.title, hiddenChildren: this.node.hiddenTree } }));
   }
 
 
   onMouseDown(event: MouseEvent) {
     //send clicked node title to
-    this.sendTitle()
+    this.sendInfoForHeader()
     const clickedElement = event.target as HTMLElement;
     //dont drag or resize if title or textArea or Menu clicked
     if (this.titleArea.nativeElement.contains(clickedElement) ||

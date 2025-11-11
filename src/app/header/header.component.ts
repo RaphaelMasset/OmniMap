@@ -13,15 +13,21 @@ import { CommonModule} from  '@angular/common';
 })
 export class HeaderComponent{
     lastClickedNodeTitle : String = '';
+    hiddenChildren : boolean = false;
     
     @Output() csvWriteClicked = new EventEmitter<void>();
     @Output() csvUploadClicked = new EventEmitter<void>();
 
     constructor() {
         window.addEventListener('nodeClicked', (event: any) => {
-            this.lastClickedNodeTitle = event.detail;
+            this.lastClickedNodeTitle = event.detail.title;
+            this.hiddenChildren = event.detail.hiddenChildren;
             //console.log('nodeClicked received by header')
         });
+    }
+
+    getext(){
+        return `${this.lastClickedNodeTitle} ${this.hiddenChildren?'(Have hidden Children!)':''}`
     }
 
     downloadCicked(){
