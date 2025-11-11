@@ -10,7 +10,7 @@ import { Plugin } from 'prosemirror-state';
 @Component({
   selector: 'app-node-text',
   imports: [],
-  template: `<div #editor class="text-area"></div>`,
+  template: `<div #editor class="text-area" [class.locked]="node.locked"></div>`, //add class locked to gray the textarea
   styleUrl: './node-text.scss',
   standalone: true
 })

@@ -29,8 +29,8 @@ class="context-menu">
         </li>
         <li (click)="onMenuAction('MinMaximiseTitle',$event)">{{ node.titleMinimized ? 'Show Title' : 'Hide Title' }}</li>
         <li (click)="onMenuAction('MinMaximiseContent',$event)">{{ node.contentMinimized ? 'Show Content' : 'Hide Content' }}</li>
-        <li (click)="onMenuAction('readonly',$event)">{{ node.locked ? 'Unlock Fields' : 'Lock Fields'}}</li>
         <li (click)="onMenuAction('MinMaximiseChildrenTree',$event)">{{ node.hiddenTree? 'Show Children' : 'Hide Children'}}</li>
+        <li (click)="onMenuAction('readonly',$event)">{{ node.locked ? 'Unlock Fields' : 'Lock Fields'}}</li>
         <li (click)="onMenuAction('deleteNode',$event)">Delete Node</li>
         <li (click)="onMenuAction('closeMenu',$event)">Close Menu</li>
     </ul>
