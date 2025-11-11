@@ -4,20 +4,24 @@
 <div class="map-of-nodes" #mapOfNodesContainer>
     <div #scalableContainerNode>          
         @for (node of nodesMapToArray; track node.id) 
-        {     
+        {
+            @if(!listOfHiddenNode.includes(node.id))  
+            {  
             <app-node 
                 [node]="node"
                 [scale]="scale"
                 (evNewChildNode)="onNewChildNode($event)"
-                (evDeleteNode)="onDeleteNode($event)">
-            </app-node>                      
+                (evDeleteNode)="onDeleteNode($event)"
+                (evEditHiddenTree)="onEditHiddenTree($event)">
+            </app-node>    
+            }                   
         }
     </div>             
     <svg > 
         <g #scalableContainerSVGLineAndPath>
         @for (node of nodesMapToArray; track node.id) 
         {
-            @if(node.id != 0)
+            @if(node.id != 0 && (!listOfHiddenNode.includes(node.id)))
             {       
                 <line         
                 [attr.x1]="getNdCenterXY(node).x"

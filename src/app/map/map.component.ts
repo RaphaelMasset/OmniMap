@@ -14,6 +14,7 @@ import { Line } from '../model_service_utils/Line';
 })
 export class MapComponent implements AfterViewInit, OnDestroy {
   nodesMap: Map<number, NodeDataModel> = new Map();
+  listOfHiddenNode: number[] = [];
   mapContainerCoordXY = { x: 0, y: 0 };
   defaultNodeDim = { w: 100, h: 100 };
   iterationBezier = Array.from({ length: 8 }, (_, i) => i);
@@ -83,6 +84,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     window.addEventListener('mousemove', this.moveListener);
     window.addEventListener('mouseup', this.upListener);
     this.mapOfNodescontainerNatEl.addEventListener('wheel', this.wheelListener);
+
+    this.updateListOfHiddenNode()
     
   }
 
@@ -103,6 +106,38 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     return false;
   }
 
+  updateListOfHiddenNode(){
+    let list:number[] = [];
+    for (const node of this.nodesMap.values()) 
+    {
+      if (node.hiddenTree) 
+      {
+        this.pushAllChildrenNode(list,node.id);
+      }
+    }
+    //remove duplicate
+    this.listOfHiddenNode = Array.from(new Set(list));
+  }
+
+
+  /**
+   * create a lsit containing  all children id of given id
+   * @param list 
+   * @param idParent 
+   * @returns 
+   */
+  pushAllChildrenNode(list:number[],idParent:number){
+    //input parent node id
+    //if some node have this idParent defined as parent ndoe id
+    //recursiv Search for child
+    //add this id to the list
+    for (const node of this.nodesMap.values()) {
+      if (node.parentNodeId == idParent) {
+        this.pushAllChildrenNode(list,node.id)
+        list.push(node.id)
+      }
+    }
+  }
   /**
    * Use node map to write a CSV file and trigger download
    */
@@ -265,8 +300,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     return nodeMap;
   }
 
-  addNewChildNodeToNodeMap(ParentId: number){
-    const parentNode = this.nodesMap.get(ParentId);
+  addNewChildNodeToNodeMap(parentId: number){
+    const parentNode = this.nodesMap.get(parentId);
     if (!parentNode) return
     let highestId = 0;
     for (const key of this.nodesMap.keys()) {
@@ -366,6 +401,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     } else {
       return
     }
+  }
+
+  onEditHiddenTree(nodeId: number) {
+    this.updateListOfHiddenNode()
+    console.log(this.listOfHiddenNode)
   }
 
  /* getParentIdList(){

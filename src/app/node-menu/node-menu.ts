@@ -14,6 +14,7 @@ export class NodeMenu {
   @Output() evNewChildNode = new EventEmitter<void>();
   @Output() evDeleteNode = new EventEmitter<void>();
   @Output() evCloseMenu = new EventEmitter<void>();
+  @Output() evEditHiddenTree = new EventEmitter<void>();
 
   opacity:number = 1;
   titleMinimised = false;
@@ -55,6 +56,7 @@ export class NodeMenu {
       
       case 'MinMaximiseChildrenTree':
         this.node.hiddenTree = !this.node.hiddenTree;
+        this.evEditHiddenTree.emit();
         break;
 
       default:

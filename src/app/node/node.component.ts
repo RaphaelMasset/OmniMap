@@ -21,6 +21,7 @@ export class Node {
   @Output() evNewChildNode = new EventEmitter<number>();
   @Output() evDeleteNode = new EventEmitter<number>();
   @Output() evCloseMenu = new EventEmitter<number>();
+  @Output() evEditHiddenTree = new EventEmitter<number>();
 
   @ViewChild('titleArea') titleArea!: ElementRef;
   @ViewChild('textArea', { read: ElementRef }) textArea!: ElementRef;  // { read: ElementRef } when is an angular component, necessary for certain calls of methods
@@ -58,7 +59,10 @@ export class Node {
   onCloseMenu() {
     this.menuVisible = false;
   }
-
+  
+  onEditHiddenTree() {
+    this.evEditHiddenTree.emit(this.node.id);
+  }
   onMinimise() {
     console.log('minimise event received');
     this.menuVisible = false;
