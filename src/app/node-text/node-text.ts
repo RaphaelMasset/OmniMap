@@ -17,6 +17,7 @@ import { Plugin } from 'prosemirror-state';
 export class NodeText implements OnInit, OnDestroy, OnChanges {
   @Input() node!: NodeDataModel;
   @Input() scale!: number;
+  @Input() contentLocked!: boolean; //TODO Useless
   @ViewChild('editor') editorElement!: ElementRef;
 
   markdownImageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
@@ -31,24 +32,35 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
     setTimeout(() => {
       this.initEditor();
     });
+    //tres moooooche
+    /*setInterval(() => {
+        if (!this.node) return;
+          this.editor.setEditable(!this.node.locked);
+        
+      }, 100); // toutes les 100ms*/
+
   }
   //changement externe ex chargement CSV
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['node']) {
-      const nodeChange = changes['node'];
-      if (nodeChange.previousValue && nodeChange.currentValue) {
-        if (nodeChange.previousValue.text !== nodeChange.currentValue.text) {
-
-          const jsonObject = this.node.text ? JSON.parse(this.node.text) : '';
-          this.editor.commands.setContent(jsonObject);
+    /*if (changes['contentLocked'] && !changes['contentLocked'].firstChange && this.editor) {
+      const prev = changes['contentLocked'].previousValue;
+      const curr = changes['contentLocked'].currentValue;
+    
+      // Seulement si la valeur a vraiment changé
+      if (prev !== curr) {
+        const editable = !curr; // locked = false -> editable = true
+        if (this.editor.isEditable !== editable) {
+          //this.editor.setEditable(editable);
+          //console.log(`📝 contentLocked changed: ${prev} → ${curr} (editable: ${editable})`);
         }
       }
-    }
+    }*/
   }
 
   private initEditor() { 
     this.editor = new Editor({
       element: this.editorElement.nativeElement,
+      //editable: !this.node.locked,
       extensions: [
         StarterKit.configure({
           heading: {
@@ -66,6 +78,20 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
       editorProps: {
         attributes: {
           class: 'text-area',
+        },
+        //prevent modification if locked but allow copy past
+        handleKeyDown: (view, event: KeyboardEvent) => {
+          if (!this.node.locked) return false; // editable
+        
+          // Allow copy/paste/select-all
+          if ((event.ctrlKey || event.metaKey)
+            && (event.key.toLowerCase() === 'c' || event.key.toLowerCase() === 'a')) return false;
+        
+          // Block regular typing
+          const nonEditingKeys = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab','Shift','Alt'];
+          if (nonEditingKeys.includes(event.key)) return false;
+        
+          return true; // block letters/numbers
         },
       },/// EL-318-LH   
       onUpdate: ({ editor }) => {

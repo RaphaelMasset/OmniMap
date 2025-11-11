@@ -108,6 +108,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
    */
   writeCsv(){
     //create a list of header by getting the keys of hte node object
+    //this.nodesMap.get(0) → returns the NodeDataModel object stored under key 0 in the map.
     const headers = Object.keys(this.nodesMap.get(0) || {});
     //conver teh map of objet to a list of object
     const nodeArray = this.nodesMapToArray;
@@ -119,9 +120,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       ...nodeArray.map(node =>
         headers.map(header =>{         
           if(header==='text'){
-            console.log(node[header] ?? '');
-            console.log(btoa(unescape(encodeURIComponent(node[header] ?? ''))))
-            console.log(decodeURIComponent(escape(atob(btoa(unescape(encodeURIComponent(node[header] ?? '')))))))
+            //console.log(node[header] ?? '');
+            //console.log(btoa(unescape(encodeURIComponent(node[header] ?? ''))))
+            //console.log(decodeURIComponent(escape(atob(btoa(unescape(encodeURIComponent(node[header] ?? '')))))))
             return btoa(unescape(encodeURIComponent(node[header] ?? ''))); //encoding base 64 eviter prb avec les escape char a la lecture 
           }else{
             return JSON.stringify(node[header] ?? '')
@@ -130,7 +131,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         }).join(',') // ligne de données pour chaque noeud
       )
     ];
-    //csvRows.forEach(e=> console.log(e))
+    //id,parentNodeId,x,y,width,height,title,color,text
+    csvRows.forEach(e=> console.log(e))
 
     const csvString = csvRows.join('\n');
     //console.log(nodeArray)
@@ -298,6 +300,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       height: partial.height ?? this.defaultNodeDim.h,
       title: partial.title ?? '', 
       color: partial.color ?? '#007bff',
+      opacity: partial.opacity ?? 1,
+      titleMinimize: partial.titleMinimized ?? false,
+      contentMinimized: partial.contentMinimized ?? false,
+      locked: partial.locked ?? false,
+      hiddenTree: partial.hiddenTree ?? false,
       text: partial.text ?? '',
     };
   }

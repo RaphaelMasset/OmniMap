@@ -13,6 +13,7 @@ export class NodeMenu {
 
   @Output() evNewChildNode = new EventEmitter<void>();
   @Output() evDeleteNode = new EventEmitter<void>();
+  @Output() evCloseMenu = new EventEmitter<void>();
 
   opacity:number = 1;
   titleMinimised = false;
@@ -40,8 +41,20 @@ export class NodeMenu {
         this.node.contentMinimized = !this.node.contentMinimized;
         break;
 
-      case 'delete':
+      case 'deleteNode':
         this.evDeleteNode.emit();
+        break;
+
+      case 'readonly':
+        this.node.locked = !this.node.locked;
+        break;
+
+      case 'closeMenu':
+        this.evCloseMenu.emit();
+        break;
+      
+      case 'MinMaximiseChildrenTree':
+        this.node.hiddenTree = !this.node.hiddenTree;
         break;
 
       default:

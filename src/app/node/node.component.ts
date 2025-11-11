@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { NodeDataModel } from '../model_service_utils/node-data.model';
 import { NodeMenu } from '../node-menu/node-menu';
 import { NodeText } from '../node-text/node-text';
+import * as CONST from '../model_service_utils/const';
 
 @Component({
   selector: 'app-node',
@@ -19,6 +20,7 @@ export class Node {
 
   @Output() evNewChildNode = new EventEmitter<number>();
   @Output() evDeleteNode = new EventEmitter<number>();
+  @Output() evCloseMenu = new EventEmitter<number>();
 
   @ViewChild('titleArea') titleArea!: ElementRef;
   @ViewChild('textArea', { read: ElementRef }) textArea!: ElementRef;  // { read: ElementRef } when is an angular component, necessary for certain calls of methods
@@ -37,6 +39,8 @@ export class Node {
 
   maxHeightTextArea = 1000;
 
+
+
   onSetColor(newColor: string) {
     this.node.color = newColor;
    // this.menuVisible = false;
@@ -51,9 +55,11 @@ export class Node {
     this.evDeleteNode.emit(this.node.id);
     this.menuVisible = false;
   }
+  onCloseMenu() {
+    this.menuVisible = false;
+  }
 
   onMinimise() {
-    // À implémenter plus tard
     console.log('minimise event received');
     this.menuVisible = false;
   }
@@ -132,8 +138,8 @@ export class Node {
     } else if (this.resizing){
       const rect = this.nodeContainer.nativeElement.getBoundingClientRect();
       //16 pixel min node size so the handle is clearly vissible and we can click, do a global var
-      if ((this.node.width + dx) >16){this.node.width += dx;} 
-      if ((this.node.height + dy)>16){this.node.height += dy;}
+      if ((this.node.width + dx) > CONST.DEFAULT_MIN_NODE_SIZE){this.node.width += dx;} 
+      if ((this.node.height + dy)> CONST.DEFAULT_MIN_NODE_SIZE){this.node.height += dy;}
     }
     this.lastX = event.clientX;
     this.lastY = event.clientY; 

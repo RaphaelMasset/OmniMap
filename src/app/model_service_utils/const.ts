@@ -1,0 +1,1 @@
+export const DEFAULT_MIN_NODE_SIZE = 16;

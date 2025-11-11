@@ -10,9 +10,11 @@ class="node-container"
 [style.top.px]="node.y"
 [style.width.px]="node.width"
 [style.height.px]="node.height">  
+
   <input 
   #titleArea
   pattern="[\x00-\x7F]*"
+  [readonly]="node.locked"
   type="text" 
   [hidden]="node.titleMinimized" 
   placeholder="Title"  
@@ -25,7 +27,9 @@ class="node-container"
   [hidden]="node.contentMinimized" 
   #textArea 
   [node]="node"
+  [contentLocked]="node.locked"
   [scale]="scale"/>
+
   <app-node-menu 
   #menu
   [hidden]="!menuVisible"
@@ -34,7 +38,8 @@ class="node-container"
   [style.top.px]="menuY"
   (evNewChildNode)="onNewChildNode()"
   (evDeleteNode)="onDeleteCurrentNode()"
-  (evMinimise)="onMinimise()">
+  (evMinimise)="onMinimise()"
+  (evCloseMenu)="onCloseMenu()">
   </app-node-menu>
   <div #resizinghandle class="resizinghandle" ></div>
 </div>
