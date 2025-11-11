@@ -1,7 +1,6 @@
 .node-container {
-  min-height: 20px; //min now that we can hid title and content
-  min-width: 20px;
   display: flex;
+  overflow: hidden;
   flex-direction: column;
   box-sizing: border-box;
   border-radius: 3px;

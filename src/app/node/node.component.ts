@@ -131,11 +131,9 @@ export class Node {
       //console.log('Dragging - dx: '+dx+' dy: '+dy)
     } else if (this.resizing){
       const rect = this.nodeContainer.nativeElement.getBoundingClientRect();
-      if ((this.node.width + dx) >0 && (this.node.height + dy)>0)
-      {
-        this.node.width += dx;
-        this.node.height += dy;
-      }
+      //16 pixel min node size so the handle is clearly vissible and we can click, do a global var
+      if ((this.node.width + dx) >16){this.node.width += dx;} 
+      if ((this.node.height + dy)>16){this.node.height += dy;}
     }
     this.lastX = event.clientX;
     this.lastY = event.clientY; 
