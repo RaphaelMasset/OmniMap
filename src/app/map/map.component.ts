@@ -87,6 +87,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     this.updateListOfHiddenNode()
     
+    window.addEventListener('clickableref-click', (event: any) => {
+        console.log('Clicked on a ref to node:', event.detail.id);
+        // do whatever you want with the node ID
+      });
   }
 
   translateScale(){

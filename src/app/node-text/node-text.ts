@@ -6,6 +6,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
 import { Markdown } from '@tiptap/markdown'
 import { Plugin } from 'prosemirror-state';
+import { ClickableRef } from './inline-refToNode'; // adjust path
 
 @Component({
   selector: 'app-node-text',
@@ -42,19 +43,7 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
   }
   //changement externe ex chargement CSV
   ngOnChanges(changes: SimpleChanges) {
-    /*if (changes['contentLocked'] && !changes['contentLocked'].firstChange && this.editor) {
-      const prev = changes['contentLocked'].previousValue;
-      const curr = changes['contentLocked'].currentValue;
-    
-      // Seulement si la valeur a vraiment changé
-      if (prev !== curr) {
-        const editable = !curr; // locked = false -> editable = true
-        if (this.editor.isEditable !== editable) {
-          //this.editor.setEditable(editable);
-          //console.log(`📝 contentLocked changed: ${prev} → ${curr} (editable: ${editable})`);
-        }
-      }
-    }*/
+
   }
 
   private initEditor() { 
@@ -71,7 +60,8 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
         Markdown,
         Placeholder.configure({
           placeholder: 'Start writing...'
-        })
+        }),
+        ClickableRef 
       ], 
       //set a l.initialisaiton
       content: this.node.text ? JSON.parse(this.node.text) : '',
@@ -108,6 +98,8 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
             if (text === ')') {
               const fullText = view.state.doc.textBetween(0, view.state.doc.content.size, '\n');
               const match = fullText.match(/!\[([^\]]*)\]\((https?:\/\/[^\)]+)\)/);
+              const match2 = fullText.match(/\[\[it:(\d+)\]\]/);
+              if (match2) {console.log('refff')}
               if (match) {
                 const [, alt, src] = match;
                 // Supprime le texte Markdown
@@ -132,20 +124,3 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
     }
   }
 }
-
-/*
-  //console.log('MD this',this.editor.getMarkdown())
-  //const md = this.editor.getMarkdown();
-  //const matches = Array.from(md.matchAll(this.markdownImageRegex), m => m[0]);
-  //console.log(matches.length)
-  //
-  //this.editor.commands.setContent(editor.getJSON());
-  //console.log('node.text apres modification du node',this.node.text)
-}// ![image](https://placehold.co/600x400)
-
-    //console.log('node.text changed from:', nodeChange.previousValue.text);
-    //console.log('node.text changed to:', nodeChange.currentValue.text);
-//console.log('node.text parsed',this.node.text ? JSON.parse(this.node.text) : 'this.node.text est nullish')
-
-
-*/
