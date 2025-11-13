@@ -88,7 +88,20 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.updateListOfHiddenNode()
     
     window.addEventListener('clickableref-click', (event: any) => {
-        console.log('Clicked on a ref to node:', event.detail.id);
+        const nodetogo = this.nodesMap.get(+event.detail.id)
+        console.log(this.nodesMap)
+        if(nodetogo){
+          console.log('Clicked on a ref to node:', event.detail.id, 'found it in map');
+          console.log('we are at', this.translateX, this.translateY, ' -- we go to: ',nodetogo?.x,nodetogo?.y,'-- diff is',nodetogo?.x - this.translateX,nodetogo?.y - this.translateY );
+          // Center horizontally
+          this.translateX = -(nodetogo.x - window.innerWidth / 2 + nodetogo.width / 2);
+          // Align top of node just under header
+          this.translateY = -(nodetogo.y - this.spaceTakenHeader);
+          this.scale = 1;
+          this.translateScale();
+          this.translateX=0;
+          this.translateY=0;
+        }
         // do whatever you want with the node ID
       });
   }

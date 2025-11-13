@@ -44,7 +44,7 @@ export const ClickableRef = TiptapNode.create({
         type: this.type,
         getAttributes: match => ({
           id: match[3],
-          label: `See node ${match[3]}`,  // friendly display
+          label: `See node ${match[3]}`,  
         }),
       }),
     ];
