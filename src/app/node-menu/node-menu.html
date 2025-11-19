@@ -2,6 +2,7 @@
 #menu
 class="context-menu">
     <ul>
+        <li class="unclickable">Node id: {{node.id}}</li>
         <li (click)="onMenuAction('newNode',$event)">New child node</li>
         <li class="li-flex">
             <div class="li-title">Color</div> 
