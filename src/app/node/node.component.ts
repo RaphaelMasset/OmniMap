@@ -99,6 +99,8 @@ export class Node {
     }
   }
 
+  getColor(){return this.node.transparent? "rgba(0, 0, 0, 0)" :this.node.color}
+
   updateTitle(event: Event) {
     const input = event.target as HTMLInputElement;
     this.node.title = input.value;

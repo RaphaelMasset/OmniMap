@@ -2,7 +2,8 @@
 <div 
 #nodeContainer
 class="node-container" 
-[style.background-color]="node.color"
+[style.border-top]="node.transparent ? '1px solid rgb(0, 0, 0, 0.1)' : 'null'"
+[style.background-color]="getColor()"
 [style.color]="node.color"
 (mousedown)="onMouseDown($event)"
 [style.position]="'absolute'"
@@ -15,6 +16,7 @@ class="node-container"
   #titleArea
   pattern="[\x00-\x7F]*"
   [readonly]="node.locked"
+  [style.border-top]="node.transparent ? '1px solid rgb(0, 0, 0, 0.1)' : 'null'"
   [class.locked]="node.locked"
   type="text" 
   [hidden]="node.titleMinimized" 
@@ -25,6 +27,8 @@ class="node-container"
   (input)="updateTitle($event)">
 
   <app-node-text 
+  [style.border-top]="node.transparent ? '1px solid rgb(0, 0, 0, 0.1)' : 'null'"
+
   [hidden]="node.contentMinimized" 
   #textArea 
   [node]="node"

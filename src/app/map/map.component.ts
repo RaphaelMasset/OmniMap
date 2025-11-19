@@ -89,10 +89,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     
     window.addEventListener('clickableref-click', (event: any) => {
         const nodetogo = this.nodesMap.get(+event.detail.id)
-        console.log(this.nodesMap)
+        //console.log(this.nodesMap)
         if(nodetogo){
-          console.log('Clicked on a ref to node:', event.detail.id, 'found it in map');
-          console.log('we are at', this.translateX, this.translateY, ' -- we go to: ',nodetogo?.x,nodetogo?.y,'-- diff is',nodetogo?.x - this.translateX,nodetogo?.y - this.translateY );
+          //console.log('Clicked on a ref to node:', event.detail.id, 'found it in map');
+          //console.log('we are at', this.translateX, this.translateY, ' -- we go to: ',nodetogo?.x,nodetogo?.y,'-- diff is',nodetogo?.x - this.translateX,nodetogo?.y - this.translateY );
           // Center horizontally
           this.translateX = -(nodetogo.x - window.innerWidth / 2 + nodetogo.width / 2);
           // Align top of node just under header
@@ -353,6 +353,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       title: partial.title ?? '', 
       color: partial.color ?? '#007bff',
       opacity: partial.opacity ?? 1,
+      transparent: partial.transparent ?? false,
       titleMinimize: partial.titleMinimized ?? false,
       contentMinimized: partial.contentMinimized ?? false,
       locked: partial.locked ?? false,

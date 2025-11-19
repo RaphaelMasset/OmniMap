@@ -30,14 +30,16 @@
                 [attr.y2]="getNdCenterXY(getParentNode(node)).y"
                 [attr.stroke]="node.color" 
                 stroke-width="2" />
-
-                @for (i of iterationBezier; track i) {
-                    <path
-                    [attr.d]="generateBezierPaths(node)[i]"
-                    [attr.fill]="node.color"                      
-                    [attr.stroke]="node.color"
-                    stroke-width="1"/>
-                }    
+                @if(!node.transparent && !getParentNode(node).transparent)
+                { 
+                    @for (i of iterationBezier; track i) {
+                        <path
+                        [attr.d]="generateBezierPaths(node)[i]"
+                        [attr.fill]="node.color"                      
+                        [attr.stroke]="node.color"
+                        stroke-width="1"/>
+                    }   
+                } 
             }
         }    
         @empty {

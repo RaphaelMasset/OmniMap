@@ -8,6 +8,7 @@ export interface NodeDataModel {
   title: string; 
   color: string;
   opacity?: number;
+  transparent: boolean;
   titleMinimized?: boolean;
   contentMinimized?: boolean;
   locked: boolean;

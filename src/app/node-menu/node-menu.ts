@@ -46,6 +46,10 @@ export class NodeMenu {
         this.evDeleteNode.emit();
         break;
 
+      case 'transparent':
+        this.node.transparent = !this.node.transparent;
+        break;
+
       case 'readonly':
         this.node.locked = !this.node.locked;
         break;

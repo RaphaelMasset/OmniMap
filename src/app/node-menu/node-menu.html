@@ -12,9 +12,10 @@ class="context-menu">
             (input)="onMenuAction('color',$event)"
             [value]="node.color || '#007bff'">
         </li>
-        <li class="li-flex">
+        <!-- +$ is need to convert string into a number -->
+        <!--li class="li-flex">
             <div class="li-title">Opacity</div>
-            <!-- +$ is need to convert string into a number -->
+            
             <div class="opacity-picker-displayer-container">
                 <input 
                 type="range" 
@@ -26,8 +27,9 @@ class="context-menu">
                 (input)="opacity = +$event.target.value">
                 <div class="opacity-displayer">{{opacity}} %</div>
             </div>
-        </li>
-        <li (click)="onMenuAction('MinMaximiseTitle',$event)">{{ node.titleMinimized ? 'Show Title' : 'Hide Title' }}</li>
+        </li-->
+        <li (click)="onMenuAction('transparent',$event)">{{ node.transparent ? 'Show Background' : 'Hide Background' }}</li>
+        <li (click)="onMenuAction('MinMaximiseTitle',$event)">{{ node.titleMinimized ? 'Show Title' : 'Hide Title' }}</li>   
         <li (click)="onMenuAction('MinMaximiseContent',$event)">{{ node.contentMinimized ? 'Show Content' : 'Hide Content' }}</li>
         <li (click)="onMenuAction('MinMaximiseChildrenTree',$event)">{{ node.hiddenTree ? 'Show Children' : 'Hide Children'}}</li>
         <li (click)="onMenuAction('readonly',$event)">{{ node.locked ? 'Unlock Fields' : 'Lock Fields'}}</li>
