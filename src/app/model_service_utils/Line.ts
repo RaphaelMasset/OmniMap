@@ -63,4 +63,8 @@ export class Line {
 
     return { x, y };
   }
+
+  lineAngle(): number {
+    return Math.atan2(this.y2 - this.y1, this.x2 - this.x1) * 180 / Math.PI;
+  }
 }

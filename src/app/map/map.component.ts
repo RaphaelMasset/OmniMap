@@ -700,4 +700,102 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     this.mapOfNodescontainerNatEl.removeEventListener('wheel', this.wheelListener);
   } 
+
+  /**
+   * return the lenght, unit direciton and normal of the given line
+   * @param line 
+   * @returns v direction unitaire /  n normal perpendiculaire unitaire /  L  length
+   */
+  geomFromLine(line: Line) {
+    const vx = line.x2 - line.x1;
+    const vy = line.y2 - line.y1;
+  
+    const L = Math.hypot(vx, vy);
+    const v = { x: vx / L, y: vy / L };       // direction unitaire
+    const n = { x: -v.y, y: v.x };            // normal perpendiculaire unitaire
+  
+    return { v, n, L };
+  }
+
+  triangleAtTip(line: Line, side: number, tip: {x:number,y:number}) {
+    const { v, n } = this.geomFromLine(line);
+  
+    const h = (Math.sqrt(3) / 2) * side;     // hauteur
+    const M = { x: tip.x - v.x * h, y: tip.y - v.y * h };
+  
+    const half = side / 2;
+    const B = { x: M.x + n.x * half, y: M.y + n.y * half };
+    const C = { x: M.x - n.x * half, y: M.y - n.y * half };
+  
+    return { tip, B, C, baseMid: M, normal: n , vunit: v};
+  }
+
+  textPosAlongLine(line: Line, dist: number, offset: number) {
+    const { v, n } = this.geomFromLine(line);
+  
+    // point à distance dist depuis x1,y1
+    const P = {
+      x: line.x1 + v.x * dist,
+      y: line.y1 + v.y * dist
+    };
+  
+    return {
+      x: P.x + n.x * offset,
+      y: P.y + n.y * offset
+    };
+  }
+
+  getTriAndTitles(childNode: NodeDataModel, side = 10) {
+    const parentNode = this.getParentNode(childNode);
+    if (!parentNode) return null;
+
+    const margin=60;
+    
+    // Ligne parent -> enfant
+    const ctrParent = this.getNdCenterXY(parentNode);
+    const ctrChild = this.getNdCenterXY(childNode);
+    const line = new Line(ctrParent.x, ctrParent.y, ctrChild.x, ctrChild.y);
+    const lineLen = line.getLength();
+    
+    // Distance du sommet du triangle depuis le centre de l'enfant
+    const halfDiagChild = Math.sqrt(childNode.width**2 + childNode.height**2)/2;
+    const halfDiagParent = Math.sqrt(parentNode.width**2 + parentNode.height**2)/2;
+    const distFromChild = halfDiagChild + margin;
+    
+    // Vérifie si le triangle peut être affiché
+    if (distFromChild + margin + halfDiagParent > lineLen) return null;
+    
+    // Point sommet du triangle vers l'enfant
+    const tip = line.getPointAtDistance(lineLen - distFromChild);
+
+    //const tri = this.gettriangleCoord(line,side,tip)
+
+    const tri = this.triangleAtTip(line, side, tip);
+    const path = `M ${tri.tip.x} ${tri.tip.y} L ${tri.B.x} ${tri.B.y} L ${tri.C.x} ${tri.C.y} Z`;
+    
+    const titleChXY = {
+      x: tri.baseMid.x - tri.vunit.x * 5,
+      y: tri.baseMid.y - tri.vunit.y * 5
+    };
+
+    const titlePaXY = line.getPointAtDistance(halfDiagParent+margin);
+   // console.log(titlePaXY)
+    const titlePa = {
+      x: titlePaXY,
+      y: titlePaXY
+    };   
+    
+    /*const titlePa = this.textPosAlongLine(
+      line,
+      halfDiagChild + 20,
+      -(halfDiagParent + 10)
+    );*/
+
+    const angle = line.lineAngle();
+    const rotCh = `rotate(${angle} ${titleChXY.x} ${titleChXY.y})`;
+    const rotPa = `rotate(${angle} ${titlePaXY.x} ${titlePaXY.y})`;
+    
+    return { path, titleChXY, titlePaXY, rotCh, rotPa };
+  }
+
 }
