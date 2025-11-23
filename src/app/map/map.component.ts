@@ -4,6 +4,14 @@ import { Node } from '../node/node.component';
 import { NodeDataModel } from '../model_service_utils/node-data.model';
 import { HeaderComponent } from '../header/header.component';
 import { Line } from '../model_service_utils/Line';
+import { NodeStoreService } from '../model_service_utils/node-store';
+
+
+
+interface TreeNode {
+  title: string;
+  children: TreeNode[];
+}
 
 @Component({
   selector: 'app-map',
@@ -48,13 +56,25 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   //todo get this form of notation
   private downListener = (event: MouseEvent) => this.onDown(event);
   
-  constructor() {
+  constructor(private nodeStoreService: NodeStoreService) {
+    
     const initialNode: NodeDataModel = this.createNode({id:0,parentNodeId:-1,title:'origin'})
     const node2 = this.createNode({id:1,parentNodeId:0,title:'2222'})
     const node3 = this.createNode({id:2,parentNodeId:0,title:'3333'})
     this.nodesMap.set(initialNode.id, initialNode); // Push inside constructor
     this.nodesMap.set(node2.id, node2); // Push inside constructor
     this.nodesMap.set(node3.id, node3); // Push inside constructor
+    
+  }
+  ngOnInit() {
+    this.nodeStoreService.createAddAndReturnNewNode({ id: 0, parentNodeId: -1, title: 'origin' });
+    this.nodeStoreService.createAddAndReturnNewNode({ id: 1, parentNodeId: 0, title: '2222' });
+    this.nodeStoreService.createAddAndReturnNewNode({ id: 2, parentNodeId: 0, title: '3333' });
+  
+    // S'abonner aux nodes, par exemple
+    this.nodeStoreService.nodes$.subscribe(map => {
+      //any changes will trigger the content here
+    });
   }
   ngAfterViewInit() {
     this.mapOfNodescontainerNatEl = this.mapOfNodesContainer.nativeElement;
@@ -72,7 +92,16 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
       this.nodesMap.get(2)!.y = this.spaceTakenHeader + 10+400;
       this.nodesMap.get(2)!.x = 400;
+
+      this.nodeStoreService.updateNode(0, { y: this.spaceTakenHeader + 10 });
+      this.nodeStoreService.updateNode(1, { y: this.spaceTakenHeader + 10 });
+      this.nodeStoreService.updateNode(1, { x: 400 });
+      this.nodeStoreService.updateNode(2, { y: this.spaceTakenHeader + 10+400 });
+      this.nodeStoreService.updateNode(2, { x: 400 });
     });
+
+    
+    console.log(this.nodeStoreService.nodes$, '.nodes')
     
     //this.mapContainerCoordXY = { x: rect.left, y: rect.top };
    // console.log('Header height: '+this.spaceTakenHeader)
@@ -366,6 +395,60 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     return Array.from(this.nodesMap.values());
   }
 
+  buildTree( rootId: number): TreeNode | null {
+    const rootNode = this.nodesMap.get(rootId);
+    if (!rootNode) return null;
+  
+    const buildRec = (node: NodeDataModel): TreeNode => {
+      // cherche les enfants directs
+      const childrenNodes = Array.from(this.nodesMap.values())
+        .filter(n => n.parentNodeId === node.id);
+  
+      return {
+        title: node.title,
+        children: childrenNodes.map(buildRec) // récursion pour chaque enfant
+      };
+    };
+  
+    return buildRec(rootNode);
+  }
+
+  
+
+  getChildTitleList(id: number): string[][] | null {
+    const node = this.nodesMap.get(id);
+    if (!node) return null;
+  
+    const listCh: string[][] = [];
+    listCh[0] = [node.title ?? '']; // niveau 0 = parent
+  
+    this.recursivSearchChildren(id, listCh, 1);
+    console.log(listCh)
+    return listCh;
+  }
+  
+  recursivSearchChildren(parentId: number, listCh: string[][], level: number) {
+    let children = Array.from(this.nodesMap.values())
+                        .filter(n => n.parentNodeId === parentId);
+  
+    if (children.length === 0) return;
+  
+    // initialise le niveau si nécessaire
+    if (!listCh[level]) listCh[level] = [];
+  
+    // ajoute les titres des enfants à ce niveau
+    for (const child of children) {
+      listCh[level].push(child.title ?? '');
+    }
+  
+    // appel récursif pour les enfants de chaque enfant
+    for (const child of children) {
+      this.recursivSearchChildren(child.id, listCh, level + 1);
+    }
+  }
+
+
+
   getNdCenterXY(node: NodeDataModel) {   
     return {
       x: (node.x - this.mapContainerCoordXY.x) + (node.width)/2,
@@ -375,6 +458,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   onNewChildNode(nodeId: number) {
     this.addNewChildNodeToNodeMap(nodeId);
+    console.log(this.buildTree(0))
   }
 
   onDeleteNode(nodeId: number) {

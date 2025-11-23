@@ -71,3 +71,34 @@
 .locked {
   filter: brightness(80%);
 }
+
+li.tooltip {
+  position: relative; /* container for absolute tooltip */
+  cursor: pointer;
+}
+
+li.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 150px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 6px;
+  border-radius: 4px;
+
+  /* Positioning */
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; /* above the li */
+  left: 50%;
+  transform: translateX(-50%);
+  
+  /* Fade in */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+li.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}

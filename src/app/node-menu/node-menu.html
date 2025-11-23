@@ -35,6 +35,8 @@ class="context-menu">
         <li (click)="onMenuAction('MinMaximiseChildrenTree',$event)">{{ node.hiddenTree ? 'Show Children' : 'Hide Children'}}</li>
         <li (click)="onMenuAction('readonly',$event)">{{ node.locked ? 'Unlock Fields' : 'Lock Fields'}}</li>
         <li (click)="onMenuAction('deleteNode',$event)">Delete Node</li>
+        <li class="tooltip">Show children list<span class="tooltiptext">This is the info bubble</span></li>
         <li (click)="onMenuAction('closeMenu',$event)">Close Menu</li>
+
     </ul>
 </div>
