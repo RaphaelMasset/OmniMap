@@ -22,6 +22,7 @@ interface TreeNode {
 })
 export class MapComponent implements AfterViewInit, OnDestroy {
   nodesMap: Map<number, NodeDataModel> = new Map();
+  nodesMapSev: Map<number, NodeDataModel> = new Map();
   listOfHiddenNode: number[] = [];
   mapContainerCoordXY = { x: 0, y: 0 };
   defaultNodeDim = { w: 100, h: 100 };
@@ -73,7 +74,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   
     // S'abonner aux nodes, par exemple
     this.nodeStoreService.nodes$.subscribe(map => {
-      //any changes will trigger the content here
+     // this.nodesMapSev = map; //sound bad to me 
     });
   }
   ngAfterViewInit() {
@@ -102,11 +103,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     
     console.log(this.nodeStoreService.nodes$, '.nodes')
-    
-    //this.mapContainerCoordXY = { x: rect.left, y: rect.top };
-   // console.log('Header height: '+this.spaceTakenHeader)
+
     
     const containerRect = this.mapOfNodescontainerNatEl.getBoundingClientRect();
+    //just in case the container move
     this.mapContainerCoordXY = { x: containerRect.left, y: containerRect.top };
 
     this.mapOfNodescontainerNatEl.addEventListener('mousedown', this.downListener);
@@ -114,15 +114,18 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     window.addEventListener('mouseup', this.upListener);
     this.mapOfNodescontainerNatEl.addEventListener('wheel', this.wheelListener);
 
-    this.updateListOfHiddenNode()
+    //this.updateListOfHiddenNode();
+    this.nodeStoreService.updateHiddenNodeList();
+    //this.listOfHiddenNode = this.nodeStoreService.hiddenNodeIds;
     
+    
+    //move to the node designed by the inline button in node-text
     window.addEventListener('clickableref-click', (event: any) => {
-        const nodetogo = this.nodesMap.get(+event.detail.id)
-        //console.log(this.nodesMap)
+        const nodetogo = this.nodeStoreService.getNodeSnapshot(event.detail.id)
+        //use service TODO
+
         if(nodetogo){
-          //console.log('Clicked on a ref to node:', event.detail.id, 'found it in map');
-          //console.log('we are at', this.translateX, this.translateY, ' -- we go to: ',nodetogo?.x,nodetogo?.y,'-- diff is',nodetogo?.x - this.translateX,nodetogo?.y - this.translateY );
-          // Center horizontally
+
           this.translateX = -(nodetogo.x - window.innerWidth / 2 + nodetogo.width / 2);
           // Align top of node just under header
           this.translateY = -(nodetogo.y - this.spaceTakenHeader);
@@ -151,10 +154,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     //this.selectedNodeIdForMenu = null;
     return false;
   }
-
+/*
   updateListOfHiddenNode(){
     let list:number[] = [];
-    for (const node of this.nodesMap.values()) 
+    for (const node of this.nodesMapToArray) 
     {
       if (node.hiddenTree) 
       {
@@ -163,7 +166,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
     //remove duplicate
     this.listOfHiddenNode = Array.from(new Set(list));
-  }
+  }*/
 
 
   /**
@@ -171,7 +174,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
    * @param list 
    * @param idParent 
    * @returns 
-   */
+   *//*
   pushAllChildrenNode(list:number[],idParent:number){
     //input parent node id
     //if some node have this idParent defined as parent ndoe id
@@ -183,7 +186,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         list.push(node.id)
       }
     }
-  }
+  }*/
+
   /**
    * Use node map to write a CSV file and trigger download
    */
@@ -392,7 +396,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   get nodesMapToArray(): NodeDataModel[] {
-    return Array.from(this.nodesMap.values());
+    return Array.from(this.nodeStoreService.getCurrentMap().values());
+    //return Array.from(this.nodesMap.values());
   }
 
   buildTree( rootId: number): TreeNode | null {
@@ -489,7 +494,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           //if we find children we replace their parent node id with the delated node parent node id or we delate them
           if (node.parentNodeId == nodeId) {
             if (userConfirmedNdAndChildDel){
-              this.recursivDeletion(node.id)
+              //this.recursivDeletion(node.id)
+              this.nodeStoreService.recursiveRemoveNodeAndChildren(node.id)
             }
             else{
               node.parentNodeId = nodeToDelete.parentNodeId;
@@ -498,31 +504,32 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         }
       }
       //then we delate the targeted node
-      this.nodesMap.delete(nodeId)
+      this.nodeStoreService.removeNode(nodeId)
+      //this.nodesMap.delete(nodeId)
     //if the user refuse to delate we return null
     } else {
       return
     }
   }
 
-  onEditHiddenTree(nodeId: number) {
-    this.updateListOfHiddenNode()
-    console.log(this.listOfHiddenNode)
-  }
+  /*onEditHiddenTree(nodeId: number) {
+    this.nodeStoreService.updateHiddenNodeList();
+    //console.log(this.listOfHiddenNode)
+  }*/
 
  /* getParentIdList(){
     const ids: number[] = Array.from(this.nodesMap.values(), v => v.id);
     return ids
   }*/
 
-  recursivDeletion(id:number){
+  /*recursivDeletion(id:number){
     for (const node of this.nodesMap.values()) {
       if (node.parentNodeId == id) {
         this.recursivDeletion(node.id)
       }
     }  //on envoi 1 -> on toruve le node 2 et trois qui on 1 en parent et on recurse// sur 2 et trois on trouve pas d'enfant alors on les delate et ensuite on delate 1
     this.nodesMap.delete(id) 
-  }
+  }*/
 
   private onDown = (event: MouseEvent) => {
     if (this.isEventInsideOneNode(event) || (event.button === 2)) {
@@ -880,6 +887,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const rotPa = `rotate(${angle} ${titlePaXY.x} ${titlePaXY.y})`;
     
     return { path, titleChXY, titlePaXY, rotCh, rotPa };
+  }
+
+  get hiddenNodeIds(): number[] {
+    return this.nodeStoreService.hiddenNodeIds;;
   }
 
 }

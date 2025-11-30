@@ -8,12 +8,21 @@ interface TreeNode {
   children: TreeNode[];
 }
 
+export interface SelectedNodeInfo {
+  id: number;
+  title: string;
+  hiddenTree: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class NodeStoreService {
   private nodesMap = new Map<number, NodeDataModel>();
   //BehaviorSubject Holds current value - Emits new values to all current subscribers when .next() is called. 
   //BehaviorSubject Can be used as both an Observable (to subscribe) and an Observer (to push new data).
   private nodesSubject = new BehaviorSubject<Map<number, NodeDataModel>>(this.nodesMap);
+  
+  //store the lsit of hidden nodes
+  private listOfHiddenNode: number[] = [];
 
   //pour exposer un BehaviorSubject  uniquement en tant qu’Observable.
   nodes$ = this.nodesSubject.asObservable();
@@ -23,6 +32,7 @@ export class NodeStoreService {
     //new node isntance to avoid "effets de boards", 
     this.nodesMap.set(node.id, { ...node });
     this.emit();
+    //copy the Map reference
   }
 
   // Update partial fields of a node
@@ -35,22 +45,28 @@ export class NodeStoreService {
   }
 
   // Remove a node by id, optionally removing all children recursively
-  removeNode(id: number, removeChildren: boolean = false): void {
+  /*removeNode(id: number, removeChildren: boolean = false): void {
     if (removeChildren) {
-      this.recursiveRemoveChildren(id);
+      this.recursiveRemoveNodeAndChildren(id);
     }
+    this.nodesMap.delete(id);
+    this.emit();
+  }*/
+
+  removeNode( id: number): void {
     this.nodesMap.delete(id);
     this.emit();
   }
 
   // Recursive helper to remove children of a node
-  private recursiveRemoveChildren(parentId: number): void {
+  recursiveRemoveNodeAndChildren(parentId: number): void {
     for (const node of this.nodesMap.values()) {
       if (node.parentNodeId === parentId) {
-        this.recursiveRemoveChildren(node.id);
-        this.nodesMap.delete(node.id);
+        this.recursiveRemoveNodeAndChildren(node.id);
+       // this.nodesMap.delete(node.id);
       }
     }
+    this.nodesMap.delete(parentId) 
   }
 
   // Get a node snapshot (non-reactive)
@@ -69,7 +85,9 @@ export class NodeStoreService {
     );
   }
 
-
+  getCurrentMap(): Map<number, NodeDataModel> {
+    return this.nodesMap;
+  }
 
   // Observable of all nodes with hiddenTree = true
   hiddenNodes$(): Observable<NodeDataModel[]> {
@@ -103,10 +121,7 @@ export class NodeStoreService {
     this.nodesSubject.next(new Map(this.nodesMap));
   }
 
-  // Optional: get list of all nodes as array
-  get nodesArray(): NodeDataModel[] {
-    return Array.from(this.nodesMap.values());
-  }
+
   generateNewId():number{
     let highestId = 0;
     for (const key of this.nodesMap.keys()) {
@@ -145,5 +160,62 @@ export class NodeStoreService {
     return newNode;
   }
 
+  // Getter to return the list (property-like access)
+  get hiddenNodeIds(): number[] {
+    return this.listOfHiddenNode;
+  }
+
+  // Public method to trigger list update
+  updateHiddenNodeList(): void {
+    const list: number[] = [];
+    
+    // Find hidden tree roots and collect all their children
+    for (const node of this.nodesMap.values()) {
+      if (node.hiddenTree) {
+        this.pushAllChildrenNode(list, node.id);
+      }
+    }
+    
+    // Remove duplicates and update
+    this.listOfHiddenNode = Array.from(new Set(list));
+    this.emit(); // Trigger change detection
+  }
+  
+  /**
+   * Recursively add all children IDs of given parent to list
+   * @param list - Array to populate
+   * @param idParent - Parent node ID
+   */
+  private pushAllChildrenNode(list: number[], idParent: number): void {
+    for (const node of this.nodesMap.values()) {
+      if (node.parentNodeId === idParent) {
+        this.pushAllChildrenNode(list, node.id);
+        list.push(node.id);
+      }
+    }
+  }
+
+  private selectedNodeSubject =new BehaviorSubject<SelectedNodeInfo | null>(null);
+  selectedNode$ = this.selectedNodeSubject.asObservable();
+  
+  // Call this when a node is clicked
+  setSelectedNode(id: number): void {
+    const node = this.nodesMap.get(id);
+    if (!node) {
+      this.selectedNodeSubject.next(null);
+      return;
+    }
+  
+    this.selectedNodeSubject.next({
+      id: node.id,
+      title: node.title,
+      hiddenTree: node.hiddenTree,
+    });
+  }
+  
+  // Optional getter if you need sync access
+  getSelectedNodeSnapshot(): SelectedNodeInfo | null {
+    return this.selectedNodeSubject.value;
+  }
   
 }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { NodeDataModel } from '../model_service_utils/node-data.model';
 import { NodeMenu } from '../node-menu/node-menu';
 import { NodeText } from '../node-text/node-text';
+import { NodeStoreService } from '../model_service_utils/node-store';
 import * as CONST from '../model_service_utils/const';
 
 @Component({
@@ -21,7 +22,7 @@ export class Node {
   @Output() evNewChildNode = new EventEmitter<number>();
   @Output() evDeleteNode = new EventEmitter<number>();
   @Output() evCloseMenu = new EventEmitter<number>();
-  @Output() evEditHiddenTree = new EventEmitter<number>();
+ //@Output() evEditHiddenTree = new EventEmitter<number>();
 
   @ViewChild('titleArea') titleArea!: ElementRef;
   @ViewChild('textArea', { read: ElementRef }) textArea!: ElementRef;  // { read: ElementRef } when is an angular component, necessary for certain calls of methods
@@ -38,9 +39,7 @@ export class Node {
   private lastX = 0;
   private lastY = 0;
 
-  maxHeightTextArea = 1000;
-
-
+  constructor(private nodeStoreService: NodeStoreService) {}
 
   onSetColor(newColor: string) {
     this.node.color = newColor;
@@ -60,10 +59,7 @@ export class Node {
     this.menuVisible = false;
   }
   
-  onEditHiddenTree() {
-    this.evEditHiddenTree.emit(this.node.id);
-    this.sendInfoForHeader()
-  }
+
   onMinimise() {
     console.log('minimise event received');
     this.menuVisible = false;
@@ -104,17 +100,12 @@ export class Node {
   updateTitle(event: Event) {
     const input = event.target as HTMLInputElement;
     this.node.title = input.value;
-    this.sendInfoForHeader()
+    this.nodeStoreService.setSelectedNode(this.node.id);
   }
-
-  sendInfoForHeader(){
-    window.dispatchEvent(new CustomEvent('nodeClicked', { detail: {title: this.node.title, hiddenChildren: this.node.hiddenTree } }));
-  }
-
 
   onMouseDown(event: MouseEvent) {
     //send clicked node title to
-    this.sendInfoForHeader()
+    this.nodeStoreService.setSelectedNode(this.node.id);
     const clickedElement = event.target as HTMLElement;
     //dont drag or resize if title or textArea or Menu clicked
     if (this.titleArea.nativeElement.contains(clickedElement) ||

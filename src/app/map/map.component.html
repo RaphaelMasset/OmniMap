@@ -5,14 +5,13 @@
     <div #scalableContainerNode>          
         @for (node of nodesMapToArray; track node.id) 
         {
-            @if(!listOfHiddenNode.includes(node.id))  
+            @if(!hiddenNodeIds.includes(node.id))  
             {  
             <app-node 
                 [node]="node"
                 [scale]="scale"
                 (evNewChildNode)="onNewChildNode($event)"
-                (evDeleteNode)="onDeleteNode($event)"
-                (evEditHiddenTree)="onEditHiddenTree($event)">
+                (evDeleteNode)="onDeleteNode($event)">
             </app-node>    
             }                   
         }
@@ -21,7 +20,7 @@
         <g #scalableContainerSVGLineAndPath>
         @for (node of nodesMapToArray; track node.id) 
         {
-            @if(node.id != 0 && (!listOfHiddenNode.includes(node.id)))
+            @if(node.id != 0 && (!hiddenNodeIds.includes(node.id)))
             {       
                 <line         
                 [attr.x1]="getNdCenterXY(node).x"
@@ -98,4 +97,6 @@
     `${getAnimChCoord(node).ctrl[5].x},${getAnimChCoord(node).ctrl[5].y} ` + 
     `${getAnimChCoord(node).ctrl[6].x},${getAnimChCoord(node).ctrl[6].y}`" 
     style="fill:none;stroke:red;stroke-width:1" />
+    
+    (evEditHiddenTree)="onEditHiddenTree($event)"
 -->

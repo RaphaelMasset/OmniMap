@@ -12,7 +12,7 @@ export interface NodeDataModel {
   titleMinimized?: boolean;
   contentMinimized?: boolean;
   locked: boolean;
-  hiddenTree?: boolean;
+  hiddenTree: boolean;
   text?: string ;
   [key: string]: number | string | undefined | boolean; // Allow indexing by string keys
 }

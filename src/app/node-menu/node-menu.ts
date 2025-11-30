@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { NodeDataModel } from '../model_service_utils/node-data.model';
+import { NodeStoreService } from '../model_service_utils/node-store';
 
 @Component({
   selector: 'app-node-menu',
@@ -14,11 +15,13 @@ export class NodeMenu {
   @Output() evNewChildNode = new EventEmitter<void>();
   @Output() evDeleteNode = new EventEmitter<void>();
   @Output() evCloseMenu = new EventEmitter<void>();
-  @Output() evEditHiddenTree = new EventEmitter<void>();
+ // @Output() evEditHiddenTree = new EventEmitter<void>();
 
   opacity:number = 1;
   titleMinimised = false;
   textMinimised = false;
+
+  constructor(private nodeStoreService: NodeStoreService) {}
 
   onMenuAction(action: string, event: Event) {
     // close menu on action
@@ -60,7 +63,8 @@ export class NodeMenu {
       
       case 'MinMaximiseChildrenTree':
         this.node.hiddenTree = !this.node.hiddenTree;
-        this.evEditHiddenTree.emit();
+        this.nodeStoreService.updateHiddenNodeList();
+       // this.evEditHiddenTree.emit();//TODO remove
         break;
 
       default:
