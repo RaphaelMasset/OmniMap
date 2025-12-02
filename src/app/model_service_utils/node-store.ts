@@ -217,5 +217,43 @@ export class NodeStoreService {
   getSelectedNodeSnapshot(): SelectedNodeInfo | null {
     return this.selectedNodeSubject.value;
   }
+
+  replaceAll(nodesMap: Map<number, NodeDataModel>): void {
+    this.nodesMap = nodesMap;
+    this.emit(); // notify all subscribers
+  }
+
+  clearAll(): void {
+    this.nodesMap.clear();
+    this.emit();
+  }
+
+  // Add to NodeStoreService
+  addNewChildNode(parentId: number): NodeDataModel {
+    const parentNode = this.nodesMap.get(parentId);
+    if (!parentNode) return null!;
+    
+    const newNodeId = this.generateNewId();
+    
+    const newNode: NodeDataModel = this.createAddAndReturnNewNode({
+      id: newNodeId,
+      parentNodeId: parentNode.id,
+      x: parentNode.x + parentNode.width + 20,
+      y: parentNode.y + parentNode.height + 20,
+      title: `Node nb ${newNodeId}`,
+      color: parentNode.color
+    });
+    
+    return newNode;
+  }
+
+  hasChildren(parentId: number): boolean {
+    return Array.from(this.nodesMap.values()).some(node => node.parentNodeId === parentId);
+  }
+
+  getParentNode(childNode: NodeDataModel): NodeDataModel {
+    const parent = this.nodesMap.get(childNode.parentNodeId);
+    return parent || childNode;
+  }
   
 }

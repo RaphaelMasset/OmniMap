@@ -21,8 +21,8 @@ interface TreeNode {
   styleUrls: ['./map.component.scss']
 })
 export class MapComponent implements AfterViewInit, OnDestroy {
-  nodesMap: Map<number, NodeDataModel> = new Map();
-  nodesMapSev: Map<number, NodeDataModel> = new Map();
+ // nodesMap: Map<number, NodeDataModel> = new Map();
+  //nodesMapSev: Map<number, NodeDataModel> = new Map();
   listOfHiddenNode: number[] = [];
   mapContainerCoordXY = { x: 0, y: 0 };
   defaultNodeDim = { w: 100, h: 100 };
@@ -45,7 +45,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   translateY = 0;
   scale = 1;
 
-  mapOfNodescontainerNatEl!: HTMLElement; // declare only
+  mapOfNodesContainerNatEl!: HTMLElement; // declare only
   scalableContNode!: HTMLElement; // declare only
   scalableContSVG!: HTMLElement; // declare only
 
@@ -56,29 +56,25 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private upListener = (event: MouseEvent) => this.onUp(event);
   //todo get this form of notation
   private downListener = (event: MouseEvent) => this.onDown(event);
+
+  constructor(private nodeStoreService: NodeStoreService) { }
   
-  constructor(private nodeStoreService: NodeStoreService) {
-    
-    const initialNode: NodeDataModel = this.createNode({id:0,parentNodeId:-1,title:'origin'})
-    const node2 = this.createNode({id:1,parentNodeId:0,title:'2222'})
-    const node3 = this.createNode({id:2,parentNodeId:0,title:'3333'})
-    this.nodesMap.set(initialNode.id, initialNode); // Push inside constructor
-    this.nodesMap.set(node2.id, node2); // Push inside constructor
-    this.nodesMap.set(node3.id, node3); // Push inside constructor
-    
-  }
   ngOnInit() {
     this.nodeStoreService.createAddAndReturnNewNode({ id: 0, parentNodeId: -1, title: 'origin' });
     this.nodeStoreService.createAddAndReturnNewNode({ id: 1, parentNodeId: 0, title: '2222' });
     this.nodeStoreService.createAddAndReturnNewNode({ id: 2, parentNodeId: 0, title: '3333' });
-  
+   /* this.nodesMap.set(0, this.nodeStoreService.createAddAndReturnNewNode({id:0,parentNodeId:-1,title:'origin'})); // Push inside constructor
+    this.nodesMap.set(1, this.nodeStoreService.createAddAndReturnNewNode({id:1,parentNodeId:0,title:'2222'})); // Push inside constructor
+    this.nodesMap.set(2, this.nodeStoreService.createAddAndReturnNewNode({id:2,parentNodeId:0,title:'3333'})); // Push inside constructor
+  */
     // S'abonner aux nodes, par exemple
     this.nodeStoreService.nodes$.subscribe(map => {
      // this.nodesMapSev = map; //sound bad to me 
     });
   }
+
   ngAfterViewInit() {
-    this.mapOfNodescontainerNatEl = this.mapOfNodesContainer.nativeElement;
+    this.mapOfNodesContainerNatEl = this.mapOfNodesContainer.nativeElement;
     this.scalableContNode = this.scalableContainerNode.nativeElement;
     this.scalableContSVG = this.scalableSvgGroup.nativeElement;
     //const rect = this.mapOfNodescontainerNatEl.getBoundingClientRect();
@@ -87,12 +83,12 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.spaceTakenHeader = rectheader.bottom;
     //initialise node  then correct his height after the view is loeaded //need timeout to avoid error
     setTimeout(() => {
-      this.nodesMap.get(0)!.y = this.spaceTakenHeader + 10;
+      /*this.nodesMap.get(0)!.y = this.spaceTakenHeader + 10;
       this.nodesMap.get(1)!.y = this.spaceTakenHeader + 10;
       this.nodesMap.get(1)!.x = 400;
 
       this.nodesMap.get(2)!.y = this.spaceTakenHeader + 10+400;
-      this.nodesMap.get(2)!.x = 400;
+      this.nodesMap.get(2)!.x = 400;*/
 
       this.nodeStoreService.updateNode(0, { y: this.spaceTakenHeader + 10 });
       this.nodeStoreService.updateNode(1, { y: this.spaceTakenHeader + 10 });
@@ -102,17 +98,17 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     });
 
     
-    console.log(this.nodeStoreService.nodes$, '.nodes')
+    //console.log(this.nodeStoreService.nodes$, '.nodes')
 
     
-    const containerRect = this.mapOfNodescontainerNatEl.getBoundingClientRect();
+    const containerRect = this.mapOfNodesContainerNatEl.getBoundingClientRect();
     //just in case the container move
     this.mapContainerCoordXY = { x: containerRect.left, y: containerRect.top };
 
-    this.mapOfNodescontainerNatEl.addEventListener('mousedown', this.downListener);
+    this.mapOfNodesContainerNatEl.addEventListener('mousedown', this.downListener);
     window.addEventListener('mousemove', this.moveListener);
     window.addEventListener('mouseup', this.upListener);
-    this.mapOfNodescontainerNatEl.addEventListener('wheel', this.wheelListener);
+    this.mapOfNodesContainerNatEl.addEventListener('wheel', this.wheelListener);
 
     //this.updateListOfHiddenNode();
     this.nodeStoreService.updateHiddenNodeList();
@@ -176,7 +172,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
    * @returns 
    *//*
   pushAllChildrenNode(list:number[],idParent:number){
-    //input parent node id
+    //input parent node id 
     //if some node have this idParent defined as parent ndoe id
     //recursiv Search for child
     //add this id to the list
@@ -193,8 +189,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
    */
   writeCsv(){
     //create a list of header by getting the keys of hte node object
-    //this.nodesMap.get(0) → returns the NodeDataModel object stored under key 0 in the map.
-    const headers = Object.keys(this.nodesMap.get(0) || {});
+    // Get node with id 0 via the service
+    const node0 = this.nodeStoreService.getNodeSnapshot(0);
+    
+    // Get headers (property names) from node0, or an empty array if not found
+    const headers = node0 ? Object.keys(node0) : [];
     //conver teh map of objet to a list of object
     const nodeArray = this.nodesMapToArray;
     /*
@@ -292,17 +291,18 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       //console.log('readCsvFile inside .onload')
       const csvText = reader.result as string;
       const lines = csvText.split('\n');  //CSV text string into an array of lines
-      this.nodesMap = this.csvToMapWithHeader(lines)
+      this.nodeStoreService.clearAll();
+      this.csvToMapWithHeader(lines)
+      
     }
     reader.readAsText(file);
     reader.onerror = () => console.error('File reading error', reader.error);
     reader.onabort = () => console.warn('File reading aborted');
   }
 
-  csvToMapWithHeader(lines: string[]): Map<number, NodeDataModel> {
-    const nodeMap = new Map<number, NodeDataModel>();
+  csvToMapWithHeader(lines: string[]) {
 
-    if (lines.length === 0){console.log('csvToMapWithHeader - no lines'); return nodeMap;};
+    if (lines.length === 0){console.log('csvToMapWithHeader - no lines'); return ;};
     const header = lines[0].split(','); // Get column names from first line
 
     //get header index and return the string at this index for the given line
@@ -329,10 +329,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       if (!idStr){
         //console.log('line '+i+' id is invalid-skip')
         continue;
-      }  // Skip invalid lines
-      //console.log(nodeIValues)
-      //console.log(getValue(nodeIValues, 'text'))
-      const nodeI: NodeDataModel = this.createNode({
+      } 
+      const nodeI: NodeDataModel = this.nodeStoreService.createAddAndReturnNewNode({
         id: Number(idStr),
         parentNodeId: Number(getValue(nodeIValues, 'parentNodeId')),
         x: Number(getValue(nodeIValues, 'x')),
@@ -341,16 +339,14 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         height: Number(getValue(nodeIValues, 'height')),
         title: getValue(nodeIValues, 'title') || '',
         color: getValue(nodeIValues, 'color') || '',
-        text: decodeURIComponent(escape(atob(getValue(nodeIValues, 'text') || ''))),
-        //text: atob(getValue(nodeIValues, 'text') || ''),
+        text: decodeURIComponent(escape(atob(getValue(nodeIValues, 'text') || '')))
       })
       console.log('node.text apres lecture csv',nodeI.text)
-      nodeMap.set(nodeI.id, nodeI);
+      this.nodeStoreService.upsertNode(nodeI);
     }
-    return nodeMap;
   }
 
-  addNewChildNodeToNodeMap(parentId: number){
+  /*addNewChildNodeToNodeMap(parentId: number){
     const parentNode = this.nodesMap.get(parentId);
     if (!parentNode) return
     let highestId = 0;
@@ -370,11 +366,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       color:parentNode.color
     })
     this.nodesMap.set(newNodeId, newNode);
-  }
+  }*/
 
   /*
   This mehod allow centralizing default parameters assignment
-   */
+   *//*
   createNode(partial: Partial<NodeDataModel>): NodeDataModel {
     return {
       id: partial.id ?? 0,
@@ -393,13 +389,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       hiddenTree: partial.hiddenTree ?? false,
       text: partial.text ?? '',
     };
-  }
+  }*/
 
   get nodesMapToArray(): NodeDataModel[] {
     return Array.from(this.nodeStoreService.getCurrentMap().values());
     //return Array.from(this.nodesMap.values());
   }
-
+/*
   buildTree( rootId: number): TreeNode | null {
     const rootNode = this.nodesMap.get(rootId);
     if (!rootNode) return null;
@@ -416,10 +412,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     };
   
     return buildRec(rootNode);
-  }
+  }*/
 
   
-
+/*
   getChildTitleList(id: number): string[][] | null {
     const node = this.nodesMap.get(id);
     if (!node) return null;
@@ -450,7 +446,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     for (const child of children) {
       this.recursivSearchChildren(child.id, listCh, level + 1);
     }
-  }
+  }*/
 
 
 
@@ -462,8 +458,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   onNewChildNode(nodeId: number) {
-    this.addNewChildNodeToNodeMap(nodeId);
-    console.log(this.buildTree(0))
+    this.nodeStoreService.addNewChildNode(nodeId);
+    //console.log(this.buildTree(0))
   }
 
   onDeleteNode(nodeId: number) {
@@ -474,23 +470,23 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       return
     }
 
-    if (!this.nodesMap.has(nodeId)) {
+    if (!this.nodeStoreService.getNodeSnapshot(nodeId)) {
       // if the node dont exist we return an error
       alert('Indexation error, this nodeId does not exist');
       return;
     }
 
-    const nodeToDelete = this.nodesMap.get(nodeId)!;
+    const nodeToDelete = this.nodeStoreService.getNodeSnapshot(nodeId)!;
     let userConfirmedNdAndChildDel = false;
     //check if this node exist 
-    const hasChildren = [...this.nodesMap.values()].some(node => node.parentNodeId === nodeToDelete.id);
+    const hasChildren = this.nodeStoreService.hasChildren(nodeToDelete.id);
     const userConfirmedNdDel = confirm('Proceeding will erase the current node are you sure ?');
     if (userConfirmedNdDel) {
       //check if the node have children, if yes ask if you want to delate them
       if (hasChildren){
         userConfirmedNdAndChildDel = confirm('Do you also want to delete children of this node ?');
         //only loop if the node have children
-        for (const node of this.nodesMap.values()) {
+        for (const node of this.nodesMapToArray) {
           //if we find children we replace their parent node id with the delated node parent node id or we delate them
           if (node.parentNodeId == nodeId) {
             if (userConfirmedNdAndChildDel){
@@ -498,7 +494,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
               this.nodeStoreService.recursiveRemoveNodeAndChildren(node.id)
             }
             else{
-              node.parentNodeId = nodeToDelete.parentNodeId;
+              this.nodeStoreService.updateNode(node.id, { 
+                      parentNodeId: nodeToDelete.parentNodeId 
+                    });
             }
           }
         }
@@ -538,7 +536,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.clickedDownm = true;
     this.startX = event.clientX;
     this.startY = event.clientY;
-    this.mapOfNodescontainerNatEl.style.cursor = 'move';
+    this.mapOfNodesContainerNatEl.style.cursor = 'move';
   };
 
   private onMove = (event: MouseEvent) => {
@@ -561,14 +559,14 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.translateX += dx;
     this.translateY += dy;
     this.clickedDownm = false;
-    this.mapOfNodescontainerNatEl.style.cursor = 'default';
+    this.mapOfNodesContainerNatEl.style.cursor = 'default';
     this.translateScale();
   };
 
   private onWheel = (event: WheelEvent) => {   
     event.preventDefault();
     
-    const rect = this.mapOfNodescontainerNatEl.getBoundingClientRect();
+    const rect = this.mapOfNodesContainerNatEl.getBoundingClientRect();
     const offsetX = event.clientX - rect.left;
     const offsetY = event.clientY - rect.top;
     const preZoomX = (offsetX - this.translateX) / this.scale;
@@ -593,14 +591,12 @@ export class MapComponent implements AfterViewInit, OnDestroy {
  * @returns 
  */
   getParentNode(pChildNode: NodeDataModel){
-    const parent = this.nodesMap.get(pChildNode.parentNodeId);
-    if(!parent) {return pChildNode}
-    return parent;
+    return this.nodeStoreService.getParentNode(pChildNode);
   }
 
   nodeLineInter(node: NodeDataModel){
 
-    const parentNd = this.getParentNode(node)
+    const parentNd = this.nodeStoreService.getParentNode(node);
     const ctrPaNd = this.getNdCenterXY(parentNd)
     const ctrNd = this.getNdCenterXY(node)
 
@@ -671,7 +667,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     };
   }
   generateBezierPaths(node: NodeDataModel): string[] {
-    const parentNode = this.getParentNode(node);
+    const parentNode = this.nodeStoreService.getParentNode(node);
     if (!parentNode) return [];
     //lets substract 4 pixels so the node cover the line edges
     const adjust = 3;
@@ -785,11 +781,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.mapOfNodescontainerNatEl.removeEventListener('mousedown', this.downListener);
+    this.mapOfNodesContainerNatEl.removeEventListener('mousedown', this.downListener);
     window.removeEventListener('mousemove', this.moveListener);
     window.removeEventListener('mouseup', this.upListener);
 
-    this.mapOfNodescontainerNatEl.removeEventListener('wheel', this.wheelListener);
+    this.mapOfNodesContainerNatEl.removeEventListener('wheel', this.wheelListener);
   } 
 
   /**
@@ -837,7 +833,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   getTriAndTitles(childNode: NodeDataModel, side = 10) {
-    const parentNode = this.getParentNode(childNode);
+    const parentNode = this.nodeStoreService.getParentNode(childNode);
     if (!parentNode) return null;
 
     const margin=60;
