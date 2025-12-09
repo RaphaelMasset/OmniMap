@@ -5,6 +5,7 @@ import { NodeDataModel } from '../model_service_utils/node-data.model';
 import { HeaderComponent } from '../header/header.component';
 import { Line } from '../model_service_utils/Line';
 import { NodeStoreService } from '../model_service_utils/node-store';
+import * as CONST from '../model_service_utils/const';
 
 
 
@@ -804,7 +805,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     return { v, n, L };
   }
 
-  triangleAtTip(line: Line, side: number, tip: {x:number,y:number}) {
+  triangleCoordsAtTip(line: Line, side: number, tip: {x:number,y:number}) {
     const { v, n } = this.geomFromLine(line);
   
     const h = (Math.sqrt(3) / 2) * side;     // hauteur
@@ -832,57 +833,61 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     };
   }
 
-  getTriAndTitles(childNode: NodeDataModel, side = 10) {
+  getLineFromGivenNodeToParent(childNode: NodeDataModel):Line{
     const parentNode = this.nodeStoreService.getParentNode(childNode);
-    if (!parentNode) return null;
-
-    const margin=60;
-    
-    // Ligne parent -> enfant
     const ctrParent = this.getNdCenterXY(parentNode);
     const ctrChild = this.getNdCenterXY(childNode);
     const line = new Line(ctrParent.x, ctrParent.y, ctrChild.x, ctrChild.y);
+    return line;
+  }
+
+  isLineLongEnoughToDisplayNodesTitles(childNode: NodeDataModel){
+    const line = this.getLineFromGivenNodeToParent(childNode);
+    const linelen = line.getLength();
+    const parentNode = this.nodeStoreService.getParentNode(childNode);
+    const lenHalfDiagChild = Math.sqrt(childNode.width**2 + childNode.height**2)/2;
+    const lenHalfDiagParent = Math.sqrt(parentNode.width**2 + parentNode.height**2)/2;
+    //check that the line is long enough so that its hard to see the paretn and that its longeur than the node diagonals length plus a margin
+    return linelen > 500 && (linelen > CONST.NODE_LINE_TEXT_MARGIN + lenHalfDiagChild + lenHalfDiagParent) ;
+  }
+
+  getTriAndTitles(childNode: NodeDataModel, side = 10) {
+    const parentNode = this.nodeStoreService.getParentNode(childNode);
+    if (!parentNode) return null;
+    
+    const line = this.getLineFromGivenNodeToParent(childNode);
     const lineLen = line.getLength();
     
     // Distance du sommet du triangle depuis le centre de l'enfant
-    const halfDiagChild = Math.sqrt(childNode.width**2 + childNode.height**2)/2;
-    const halfDiagParent = Math.sqrt(parentNode.width**2 + parentNode.height**2)/2;
-    const distFromChild = halfDiagChild + margin;
+    const lenHalfDiagChild = Math.sqrt(childNode.width**2 + childNode.height**2)/2;
+    const lenHalfDiagParent = Math.sqrt(parentNode.width**2 + parentNode.height**2)/2;
+    const distTriangleFromChildCntr = lenHalfDiagChild + CONST.NODE_LINE_TEXT_MARGIN;
+    const distTriangleFromParentCntr = lenHalfDiagParent + CONST.NODE_LINE_TEXT_MARGIN;
+
     
     // Vérifie si le triangle peut être affiché
-    if (distFromChild + margin + halfDiagParent > lineLen) return null;
+    if (distTriangleFromChildCntr + distTriangleFromParentCntr > lineLen) return null;
     
     // Point sommet du triangle vers l'enfant
-    const tip = line.getPointAtDistance(lineLen - distFromChild);
+    const tip = line.getPointAtDistance(lineLen - distTriangleFromChildCntr);
 
     //const tri = this.gettriangleCoord(line,side,tip)
 
-    const tri = this.triangleAtTip(line, side, tip);
-    const path = `M ${tri.tip.x} ${tri.tip.y} L ${tri.B.x} ${tri.B.y} L ${tri.C.x} ${tri.C.y} Z`;
+    const tri = this.triangleCoordsAtTip(line, side, tip);
+    const triPath = `M ${tri.tip.x} ${tri.tip.y} L ${tri.B.x} ${tri.B.y} L ${tri.C.x} ${tri.C.y} Z`;
     
     const titleChXY = {
       x: tri.baseMid.x - tri.vunit.x * 5,
       y: tri.baseMid.y - tri.vunit.y * 5
     };
 
-    const titlePaXY = line.getPointAtDistance(halfDiagParent+margin);
-   // console.log(titlePaXY)
-    const titlePa = {
-      x: titlePaXY,
-      y: titlePaXY
-    };   
-    
-    /*const titlePa = this.textPosAlongLine(
-      line,
-      halfDiagChild + 20,
-      -(halfDiagParent + 10)
-    );*/
+    const titlePaXY = line.getPointAtDistance(distTriangleFromParentCntr);
 
     const angle = line.lineAngle();
     const rotCh = `rotate(${angle} ${titleChXY.x} ${titleChXY.y})`;
     const rotPa = `rotate(${angle} ${titlePaXY.x} ${titlePaXY.y})`;
     
-    return { path, titleChXY, titlePaXY, rotCh, rotPa };
+    return {triPath, titleChXY, titlePaXY, rotCh, rotPa };
   }
 
   get hiddenNodeIds(): number[] {

@@ -21,11 +21,6 @@ export class HeaderComponent implements  OnInit, OnDestroy {
     private sub?: Subscription;
 
     constructor(private nodeStoreService: NodeStoreService) {
-        /*window.addEventListener('nodeClicked', (event: any) => {
-            this.lastClickedNodeTitle = event.detail.title;
-            this.hiddenChildren = event.detail.hiddenChildren;
-            //console.log('nodeClicked received by header')
-        });*/
     }
 
     ngOnInit() {
@@ -45,7 +40,10 @@ export class HeaderComponent implements  OnInit, OnDestroy {
     }
 
     getext(){
-        return `${this.lastClickedNodeTitle} ${this.hiddenChildren?'(Have hidden Children!)':''}`
+      const txt = this.lastClickedNodeTitle ?
+        `Last node: ${this.lastClickedNodeTitle} ${this.hiddenChildren?'(Have hidden Children!)':''}` :
+        ``
+        return txt;
     }
 
     downloadCicked(){

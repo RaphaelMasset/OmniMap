@@ -13,6 +13,7 @@
 
 h1,h2,h3{
   padding: 1px;
+  padding-left: 5px;
   margin: 1px;
   justify-content: baseline;
 
@@ -36,9 +37,8 @@ h2 {
 .selected-node-title {
   flex: 5;
   text-align: left;
-  color: rgb(110, 110, 110);
+  color: rgb(0, 0, 0);
 }
-
 
 img {
   width: clamp(30px, 2vw, 40px);
