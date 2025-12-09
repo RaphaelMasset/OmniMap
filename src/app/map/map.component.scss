@@ -6,7 +6,7 @@ map-header, svg, .map-of-nodes {
 map-header{
   width: 100vw;
   z-index: +4 !important;
-  background-color: rgba(255, 255, 255, 0.2);
+
 } 
 map-of-nodes {
   width: 100vw;
@@ -27,3 +27,7 @@ svg {
 
 }
 
+
+app-menu{
+  z-index: +4 !important;
+}

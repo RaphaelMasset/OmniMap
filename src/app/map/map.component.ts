@@ -3,11 +3,10 @@ import { CommonModule} from  '@angular/common';
 import { Node } from '../node/node.component';
 import { NodeDataModel } from '../model_service_utils/node-data.model';
 import { HeaderComponent } from '../header/header.component';
+import { Menu } from '../menu/menu';
 import { Line } from '../model_service_utils/Line';
 import { NodeStoreService } from '../model_service_utils/node-store';
 import * as CONST from '../model_service_utils/const';
-
-
 
 interface TreeNode {
   title: string;
@@ -17,7 +16,7 @@ interface TreeNode {
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [ CommonModule, HeaderComponent, Node],
+  imports: [ CommonModule, HeaderComponent, Node, Menu],
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.scss']
 })
@@ -58,17 +57,17 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   //todo get this form of notation
   private downListener = (event: MouseEvent) => this.onDown(event);
 
+  menuVisible = false;
+  menuRightSide = 0;
+  menuY = 0;
+
   constructor(private nodeStoreService: NodeStoreService) { }
   
   ngOnInit() {
     this.nodeStoreService.createAddAndReturnNewNode({ id: 0, parentNodeId: -1, title: 'origin' });
     this.nodeStoreService.createAddAndReturnNewNode({ id: 1, parentNodeId: 0, title: '2222' });
     this.nodeStoreService.createAddAndReturnNewNode({ id: 2, parentNodeId: 0, title: '3333' });
-   /* this.nodesMap.set(0, this.nodeStoreService.createAddAndReturnNewNode({id:0,parentNodeId:-1,title:'origin'})); // Push inside constructor
-    this.nodesMap.set(1, this.nodeStoreService.createAddAndReturnNewNode({id:1,parentNodeId:0,title:'2222'})); // Push inside constructor
-    this.nodesMap.set(2, this.nodeStoreService.createAddAndReturnNewNode({id:2,parentNodeId:0,title:'3333'})); // Push inside constructor
-  */
-    // S'abonner aux nodes, par exemple
+
     this.nodeStoreService.nodes$.subscribe(map => {
      // this.nodesMapSev = map; //sound bad to me 
     });
@@ -78,24 +77,21 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.mapOfNodesContainerNatEl = this.mapOfNodesContainer.nativeElement;
     this.scalableContNode = this.scalableContainerNode.nativeElement;
     this.scalableContSVG = this.scalableSvgGroup.nativeElement;
-    //const rect = this.mapOfNodescontainerNatEl.getBoundingClientRect();
-    const rectheader = this.header.nativeElement.getBoundingClientRect();
+
+    const rectHeader = this.header.nativeElement.getBoundingClientRect();
     
-    this.spaceTakenHeader = rectheader.bottom;
+    this.spaceTakenHeader = rectHeader.bottom;
     //initialise node  then correct his height after the view is loeaded //need timeout to avoid error
     setTimeout(() => {
-      /*this.nodesMap.get(0)!.y = this.spaceTakenHeader + 10;
-      this.nodesMap.get(1)!.y = this.spaceTakenHeader + 10;
-      this.nodesMap.get(1)!.x = 400;
 
-      this.nodesMap.get(2)!.y = this.spaceTakenHeader + 10+400;
-      this.nodesMap.get(2)!.x = 400;*/
-
-      this.nodeStoreService.updateNode(0, { y: this.spaceTakenHeader + 10 });
-      this.nodeStoreService.updateNode(1, { y: this.spaceTakenHeader + 10 });
+      this.nodeStoreService.updateNode(0, { y: 100 });
+      this.nodeStoreService.updateNode(1, { y: 100 });
       this.nodeStoreService.updateNode(1, { x: 400 });
-      this.nodeStoreService.updateNode(2, { y: this.spaceTakenHeader + 10+400 });
+      this.nodeStoreService.updateNode(2, { y: 500 });
       this.nodeStoreService.updateNode(2, { x: 400 });
+
+      this.menuY = this.spaceTakenHeader;
+      console.log(this.menuRightSide)
     });
 
     
@@ -125,7 +121,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
           this.translateX = -(nodetogo.x - window.innerWidth / 2 + nodetogo.width / 2);
           // Align top of node just under header
-          this.translateY = -(nodetogo.y - this.spaceTakenHeader);
+          this.translateY = -(nodetogo.y);
           this.scale = 1;
           this.translateScale();
           this.translateX=0;
@@ -151,19 +147,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     //this.selectedNodeIdForMenu = null;
     return false;
   }
-/*
-  updateListOfHiddenNode(){
-    let list:number[] = [];
-    for (const node of this.nodesMapToArray) 
-    {
-      if (node.hiddenTree) 
-      {
-        this.pushAllChildrenNode(list,node.id);
-      }
-    }
-    //remove duplicate
-    this.listOfHiddenNode = Array.from(new Set(list));
-  }*/
+
 
 
   /**
@@ -260,6 +244,12 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     // the file imput HTML elemt is style="display: none;" so we programmatically click on it when the event occur
     this.fileInput.nativeElement.click();
     //console.log("uploadCsv()")
+  }
+
+  showMenu(){
+    this.menuVisible = !this.menuVisible;
+
+  
   }
 
   onFileSelected(event: Event){ 
