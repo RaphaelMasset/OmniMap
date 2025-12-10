@@ -12,9 +12,9 @@ import { NodeStoreService } from '../model_service_utils/node-store';
 export class NodeMenu {
   @Input() node!: NodeDataModel;
 
-  @Output() evNewChildNode = new EventEmitter<void>();
-  @Output() evDeleteNode = new EventEmitter<void>();
-  @Output() evCloseMenu = new EventEmitter<void>();
+  @Output() evNewChildNodeClicked = new EventEmitter<void>();
+  @Output() evDeleteNodeClicked = new EventEmitter<void>();
+  @Output() evCloseMenuClicked = new EventEmitter<void>();
  // @Output() evEditHiddenTree = new EventEmitter<void>();
 
   opacity:number = 1;
@@ -30,7 +30,8 @@ export class NodeMenu {
     switch (action) 
     {
       case 'newNode':
-        this.evNewChildNode.emit();
+        this.evNewChildNodeClicked.emit();
+        this.nodeStoreService.addNewChildNode(this.node.id);
         break;
 
       case 'color':
@@ -46,7 +47,8 @@ export class NodeMenu {
         break;
 
       case 'deleteNode':
-        this.evDeleteNode.emit();
+        this.nodeStoreService.tryDeleteNode(this.node.id);
+        this.evDeleteNodeClicked.emit();
         break;
 
       case 'transparent':
@@ -58,7 +60,7 @@ export class NodeMenu {
         break;
 
       case 'closeMenu':
-        this.evCloseMenu.emit();
+        this.evCloseMenuClicked.emit();
         break;
       
       case 'MinMaximiseChildrenTree':

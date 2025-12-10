@@ -41,10 +41,9 @@ class="node-container"
   [node]="node"
   [style.left.px]="menuX"
   [style.top.px]="menuY"
-  (evNewChildNode)="onNewChildNode()"
-  (evDeleteNode)="onDeleteCurrentNode()"
-  (evMinimise)="onMinimise()"
-  (evCloseMenu)="onCloseMenu()">
+  (evNewChildNodeClicked)="newChildNodeClicked()"
+  (evDeleteNodeClicked)="deleteCurrentNodeClicked()"
+  (evCloseMenuClicked)="closeMenuClicked()">
   </app-node-menu>
   <div #resizinghandle class="resizinghandle" ></div>
 </div>

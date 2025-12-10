@@ -19,19 +19,24 @@ export class NodeStoreService {
   private nodesMap = new Map<number, NodeDataModel>();
   //BehaviorSubject Holds current value - Emits new values to all current subscribers when .next() is called. 
   //BehaviorSubject Can be used as both an Observable (to subscribe) and an Observer (to push new data).
-  private nodesSubject = new BehaviorSubject<Map<number, NodeDataModel>>(this.nodesMap);
+  private nodesMapSubject = new BehaviorSubject<Map<number, NodeDataModel>>(this.nodesMap);
   
+  private originNode: NodeDataModel = this.createAddAndReturnNewNode({ id: 0, parentNodeId: -1, title: 'origin' });
+
   //store the lsit of hidden nodes
   private listOfHiddenNode: number[] = [];
 
   //pour exposer un BehaviorSubject  uniquement en tant qu’Observable.
-  nodes$ = this.nodesSubject.asObservable();
-  
+  nodes$ = this.nodesMapSubject.asObservable();
+  private selectedNodeSubject =new BehaviorSubject<SelectedNodeInfo | null>(null);
+  selectedNode$ = this.selectedNodeSubject.asObservable();
+
+
   // Add or update a node
   upsertNode(node: NodeDataModel): void {
     //new node isntance to avoid "effets de boards", 
     this.nodesMap.set(node.id, { ...node });
-    this.emit();
+    this.emitObservableNodesMap();
     //copy the Map reference
   }
 
@@ -41,32 +46,7 @@ export class NodeStoreService {
     if (!node) return;
     //{ ...node, ...patch } creates a new object by copying all properties from node and then overwriting or adding properties from patch.
     this.nodesMap.set(id, { ...node, ...patch });
-    this.emit();
-  }
-
-  // Remove a node by id, optionally removing all children recursively
-  /*removeNode(id: number, removeChildren: boolean = false): void {
-    if (removeChildren) {
-      this.recursiveRemoveNodeAndChildren(id);
-    }
-    this.nodesMap.delete(id);
-    this.emit();
-  }*/
-
-  removeNode( id: number): void {
-    this.nodesMap.delete(id);
-    this.emit();
-  }
-
-  // Recursive helper to remove children of a node
-  recursiveRemoveNodeAndChildren(parentId: number): void {
-    for (const node of this.nodesMap.values()) {
-      if (node.parentNodeId === parentId) {
-        this.recursiveRemoveNodeAndChildren(node.id);
-       // this.nodesMap.delete(node.id);
-      }
-    }
-    this.nodesMap.delete(parentId) 
+    this.emitObservableNodesMap();
   }
 
   // Get a node snapshot (non-reactive)
@@ -89,6 +69,11 @@ export class NodeStoreService {
     return this.nodesMap;
   }
 
+  getCurrentNodesArray(): NodeDataModel[] {
+    const array = Array.from(this.nodesMap.values());
+    return array.length > 0 ? array : [this.originNode];
+  }
+
   // Observable of all nodes with hiddenTree = true
   hiddenNodes$(): Observable<NodeDataModel[]> {
     return this.nodes$.pipe(
@@ -102,25 +87,21 @@ export class NodeStoreService {
   buildTree(rootId: number): TreeNode | null {
     const rootNode = this.nodesMap.get(rootId);
     if (!rootNode) return null;
-
     const buildRec = (node: NodeDataModel): TreeNode => {
-      const children = Array.from(this.nodesMap.values())
+      const nodesArray = this.getCurrentNodesArray()
         .filter(n => n.parentNodeId === node.id);
-
       return {
         title: node.title,
-        children: children.map(buildRec)
+        children: nodesArray.map(buildRec)
       };
     };
-
     return buildRec(rootNode);
   }
 
   // Helper to emit changes (create new Map to trigger change detection)
-  private emit(): void {
-    this.nodesSubject.next(new Map(this.nodesMap));
+  private emitObservableNodesMap(): void {
+    this.nodesMapSubject.next(new Map(this.nodesMap));
   }
-
 
   generateNewId():number{
     let highestId = 0;
@@ -132,7 +113,6 @@ export class NodeStoreService {
     const newNodeId = highestId+1;
     return newNodeId
   }
-
 
   /*
   This mehod allow centralizing default parameters assignment
@@ -170,15 +150,15 @@ export class NodeStoreService {
     const list: number[] = [];
     
     // Find hidden tree roots and collect all their children
-    for (const node of this.nodesMap.values()) {
+    for (const node of this.getCurrentNodesArray()) {
       if (node.hiddenTree) {
-        this.pushAllChildrenNode(list, node.id);
+        this.pushAllChildrenNodeinGivenList(list, node.id);
       }
     }
     
     // Remove duplicates and update
     this.listOfHiddenNode = Array.from(new Set(list));
-    this.emit(); // Trigger change detection
+    this.emitObservableNodesMap(); // Trigger change detection
   }
   
   /**
@@ -186,17 +166,16 @@ export class NodeStoreService {
    * @param list - Array to populate
    * @param idParent - Parent node ID
    */
-  private pushAllChildrenNode(list: number[], idParent: number): void {
-    for (const node of this.nodesMap.values()) {
+  private pushAllChildrenNodeinGivenList(list: number[], idParent: number): void {
+    for (const node of this.getCurrentNodesArray()) {
       if (node.parentNodeId === idParent) {
-        this.pushAllChildrenNode(list, node.id);
+        this.pushAllChildrenNodeinGivenList(list, node.id);
         list.push(node.id);
       }
     }
   }
 
-  private selectedNodeSubject =new BehaviorSubject<SelectedNodeInfo | null>(null);
-  selectedNode$ = this.selectedNodeSubject.asObservable();
+
   
   // Call this when a node is clicked
   setSelectedNode(id: number): void {
@@ -220,12 +199,12 @@ export class NodeStoreService {
 
   replaceAll(nodesMap: Map<number, NodeDataModel>): void {
     this.nodesMap = nodesMap;
-    this.emit(); // notify all subscribers
+    this.emitObservableNodesMap(); // notify all subscribers
   }
 
   clearAll(): void {
     this.nodesMap.clear();
-    this.emit();
+    this.emitObservableNodesMap();
   }
 
   // Add to NodeStoreService
@@ -248,7 +227,7 @@ export class NodeStoreService {
   }
 
   hasChildren(parentId: number): boolean {
-    return Array.from(this.nodesMap.values()).some(node => node.parentNodeId === parentId);
+    return this.getCurrentNodesArray().some(node => node.parentNodeId === parentId);
   }
 
   getParentNode(childNode: NodeDataModel): NodeDataModel {
@@ -256,4 +235,68 @@ export class NodeStoreService {
     return parent || childNode;
   }
   
+
+  tryDeleteNode(nodeId: number) { 
+    //prevent user from delating the last node if there is only one
+    if (nodeId == 0){
+      alert('The original node is needed to create new nodes');
+      return
+    }
+
+    const nodeToDelete = this.getNodeSnapshot(nodeId)!;
+  
+    if (!nodeToDelete) {
+      // if the node dont exist we return an error
+      alert('Indexation error, this nodeId does not exist');
+      return;
+    }
+
+    let userConfirmedNdAndChildDel = false;
+    //check if this node exist 
+    const hasChildren = this.hasChildren(nodeToDelete.id);
+    const userConfirmedNdDel = confirm('Proceeding will erase the current node are you sure ?');
+    if (userConfirmedNdDel) {
+      //check if the node have children, if yes ask if you want to delate them
+      if (hasChildren){
+        userConfirmedNdAndChildDel = confirm('Do you also want to delete children of this node ?');
+        //only loop if the node have children
+        for (const node of this.getCurrentNodesArray()) {
+          //if we find children we replace their parent node id with the delated node parent node id or we delate them
+          if (node.parentNodeId == nodeId){
+            if (userConfirmedNdAndChildDel){
+              //this.recursivDeletion(node.id)
+              this.recursiveRemoveNodeAndChildren(node.id)
+            }
+            else{
+              this.updateNode(node.id, { 
+                parentNodeId: nodeToDelete.parentNodeId 
+              });
+            }
+          }
+        }
+      }
+      //then we delate the targeted node
+      this.removeNode(nodeId)
+      //this.nodesMap.delete(nodeId)
+    //if the user refuse to delate we return null
+    } else {
+      return
+    }
+  }
+
+  removeNode( id: number): void {
+    this.nodesMap.delete(id);
+    this.emitObservableNodesMap();
+  }
+  
+  // Recursive helper to remove children of a node
+  recursiveRemoveNodeAndChildren(parentId: number): void {
+    for (const node of this.getCurrentNodesArray()) {
+      if (node.parentNodeId === parentId) {
+        this.recursiveRemoveNodeAndChildren(node.id);
+       // this.nodesMap.delete(node.id);
+      }
+    }
+    this.nodesMap.delete(parentId) 
+  }
 }

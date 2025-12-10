@@ -64,7 +64,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   constructor(private nodeStoreService: NodeStoreService) { }
   
   ngOnInit() {
-    this.nodeStoreService.createAddAndReturnNewNode({ id: 0, parentNodeId: -1, title: 'origin' });
+    //origin cree dans le service!
     this.nodeStoreService.createAddAndReturnNewNode({ id: 1, parentNodeId: 0, title: '2222' });
     this.nodeStoreService.createAddAndReturnNewNode({ id: 2, parentNodeId: 0, title: '3333' });
 
@@ -337,188 +337,17 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  /*addNewChildNodeToNodeMap(parentId: number){
-    const parentNode = this.nodesMap.get(parentId);
-    if (!parentNode) return
-    let highestId = 0;
-    for (const key of this.nodesMap.keys()) {
-      if (key > highestId) {
-        highestId = key;
-      }
-    }
-    const newNodeId = highestId+1;
-
-    const newNode: NodeDataModel = this.createNode({
-      id:newNodeId,
-      parentNodeId:parentNode.id,
-      x:parentNode.x+parentNode.width+20,
-      y:parentNode.y+parentNode.height+20,
-      title:`Node nb ${newNodeId}`,
-      color:parentNode.color
-    })
-    this.nodesMap.set(newNodeId, newNode);
-  }*/
-
-  /*
-  This mehod allow centralizing default parameters assignment
-   *//*
-  createNode(partial: Partial<NodeDataModel>): NodeDataModel {
-    return {
-      id: partial.id ?? 0,
-      parentNodeId: partial.parentNodeId ?? 0,
-      x: partial.x ?? 10, 
-      y: partial.y ?? 0,
-      width: partial.width ?? this.defaultNodeDim.w,
-      height: partial.height ?? this.defaultNodeDim.h,
-      title: partial.title ?? '', 
-      color: partial.color ?? '#007bff',
-      opacity: partial.opacity ?? 1,
-      transparent: partial.transparent ?? false,
-      titleMinimize: partial.titleMinimized ?? false,
-      contentMinimized: partial.contentMinimized ?? false,
-      locked: partial.locked ?? false,
-      hiddenTree: partial.hiddenTree ?? false,
-      text: partial.text ?? '',
-    };
-  }*/
 
   get nodesMapToArray(): NodeDataModel[] {
-    return Array.from(this.nodeStoreService.getCurrentMap().values());
+    return this.nodeStoreService.getCurrentNodesArray();
     //return Array.from(this.nodesMap.values());
   }
-/*
-  buildTree( rootId: number): TreeNode | null {
-    const rootNode = this.nodesMap.get(rootId);
-    if (!rootNode) return null;
-  
-    const buildRec = (node: NodeDataModel): TreeNode => {
-      // cherche les enfants directs
-      const childrenNodes = Array.from(this.nodesMap.values())
-        .filter(n => n.parentNodeId === node.id);
-  
-      return {
-        title: node.title,
-        children: childrenNodes.map(buildRec) // récursion pour chaque enfant
-      };
-    };
-  
-    return buildRec(rootNode);
-  }*/
-
-  
-/*
-  getChildTitleList(id: number): string[][] | null {
-    const node = this.nodesMap.get(id);
-    if (!node) return null;
-  
-    const listCh: string[][] = [];
-    listCh[0] = [node.title ?? '']; // niveau 0 = parent
-  
-    this.recursivSearchChildren(id, listCh, 1);
-    console.log(listCh)
-    return listCh;
-  }
-  
-  recursivSearchChildren(parentId: number, listCh: string[][], level: number) {
-    let children = Array.from(this.nodesMap.values())
-                        .filter(n => n.parentNodeId === parentId);
-  
-    if (children.length === 0) return;
-  
-    // initialise le niveau si nécessaire
-    if (!listCh[level]) listCh[level] = [];
-  
-    // ajoute les titres des enfants à ce niveau
-    for (const child of children) {
-      listCh[level].push(child.title ?? '');
-    }
-  
-    // appel récursif pour les enfants de chaque enfant
-    for (const child of children) {
-      this.recursivSearchChildren(child.id, listCh, level + 1);
-    }
-  }*/
-
-
-
   getNdCenterXY(node: NodeDataModel) {   
     return {
       x: (node.x - this.mapContainerCoordXY.x) + (node.width)/2,
       y: (node.y - this.mapContainerCoordXY.y) + (node.height)/2,
     };
   }
-
-  onNewChildNode(nodeId: number) {
-    this.nodeStoreService.addNewChildNode(nodeId);
-    //console.log(this.buildTree(0))
-  }
-
-  onDeleteNode(nodeId: number) {
-    
-    //prevent user from delating the last node if there is only one
-    if (nodeId == 0){
-      alert('You need at least one node to create new ones');
-      return
-    }
-
-    if (!this.nodeStoreService.getNodeSnapshot(nodeId)) {
-      // if the node dont exist we return an error
-      alert('Indexation error, this nodeId does not exist');
-      return;
-    }
-
-    const nodeToDelete = this.nodeStoreService.getNodeSnapshot(nodeId)!;
-    let userConfirmedNdAndChildDel = false;
-    //check if this node exist 
-    const hasChildren = this.nodeStoreService.hasChildren(nodeToDelete.id);
-    const userConfirmedNdDel = confirm('Proceeding will erase the current node are you sure ?');
-    if (userConfirmedNdDel) {
-      //check if the node have children, if yes ask if you want to delate them
-      if (hasChildren){
-        userConfirmedNdAndChildDel = confirm('Do you also want to delete children of this node ?');
-        //only loop if the node have children
-        for (const node of this.nodesMapToArray) {
-          //if we find children we replace their parent node id with the delated node parent node id or we delate them
-          if (node.parentNodeId == nodeId) {
-            if (userConfirmedNdAndChildDel){
-              //this.recursivDeletion(node.id)
-              this.nodeStoreService.recursiveRemoveNodeAndChildren(node.id)
-            }
-            else{
-              this.nodeStoreService.updateNode(node.id, { 
-                      parentNodeId: nodeToDelete.parentNodeId 
-                    });
-            }
-          }
-        }
-      }
-      //then we delate the targeted node
-      this.nodeStoreService.removeNode(nodeId)
-      //this.nodesMap.delete(nodeId)
-    //if the user refuse to delate we return null
-    } else {
-      return
-    }
-  }
-
-  /*onEditHiddenTree(nodeId: number) {
-    this.nodeStoreService.updateHiddenNodeList();
-    //console.log(this.listOfHiddenNode)
-  }*/
-
- /* getParentIdList(){
-    const ids: number[] = Array.from(this.nodesMap.values(), v => v.id);
-    return ids
-  }*/
-
-  /*recursivDeletion(id:number){
-    for (const node of this.nodesMap.values()) {
-      if (node.parentNodeId == id) {
-        this.recursivDeletion(node.id)
-      }
-    }  //on envoi 1 -> on toruve le node 2 et trois qui on 1 en parent et on recurse// sur 2 et trois on trouve pas d'enfant alors on les delate et ensuite on delate 1
-    this.nodesMap.delete(id) 
-  }*/
 
   private onDown = (event: MouseEvent) => {
     if (this.isEventInsideOneNode(event) || (event.button === 2)) {

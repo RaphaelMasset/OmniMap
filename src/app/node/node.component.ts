@@ -19,11 +19,6 @@ export class Node {
   
   @ViewChild('nodeContainer', { read: ElementRef }) nodeContainer!: ElementRef;
 
-  @Output() evNewChildNode = new EventEmitter<number>();
-  @Output() evDeleteNode = new EventEmitter<number>();
-  @Output() evCloseMenu = new EventEmitter<number>();
- //@Output() evEditHiddenTree = new EventEmitter<number>();
-
   @ViewChild('titleArea') titleArea!: ElementRef;
   @ViewChild('textArea', { read: ElementRef }) textArea!: ElementRef;  // { read: ElementRef } when is an angular component, necessary for certain calls of methods
   @ViewChild('resizinghandle') resizinghandle!: ElementRef;
@@ -46,20 +41,19 @@ export class Node {
    // this.menuVisible = false;
   }
 
-  onNewChildNode() {
-    this.evNewChildNode.emit(this.node.id);
-    this.menuVisible = false;
+  newChildNodeClicked() {
+    this.hideMenu()
   }
 
-  onDeleteCurrentNode() {
-    this.evDeleteNode.emit(this.node.id);
-    this.menuVisible = false;
+  deleteCurrentNodeClicked() {
+    this.hideMenu()
   }
-  onCloseMenu() {
-    this.menuVisible = false;
+  closeMenuClicked() {
+    this.hideMenu()
   }
+
+  hideMenu(){this.menuVisible = false;}
   
-
   onMinimise() {
     console.log('minimise event received');
     this.menuVisible = false;
