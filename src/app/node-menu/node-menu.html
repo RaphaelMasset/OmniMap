@@ -24,6 +24,7 @@
                 <input 
                 type="number" 
                 class="nb-input"
+                (click)="$event.stopPropagation()"
                 (change)="onDepthChange($event)"
                 [value]="treeDisplayDepth"
                 min="1" 
@@ -37,6 +38,7 @@
                     type="number" 
                     class="nb-input"
                     (change)="onNewParentChange($event)"
+                    (click)="$event.stopPropagation()"
                     [value]=" newParentID>=0 ? newParentID : '' "
                     min="0">
                 </li>
