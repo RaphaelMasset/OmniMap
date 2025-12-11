@@ -1,47 +1,58 @@
-<div 
-#menu
-class="context-menu">
-    <ul>
-        <li class="unclickable">Node id: {{node.id}}</li>
-        <li (click)="onMenuAction('newNode',$event)">New child node</li>
-        <li class="li-flex">
-            <div class="li-title">Color</div> 
-            <input 
-            #colorPicker  
-            type="color"
-            class="color-picker"
-            (input)="onMenuAction('color',$event)"
-            [value]="node.color || '#007bff'">
-        </li>
+@if(node)
+{
+    <div 
+    #menu
+    class="context-menu">
+        <ul>
+            <li class="unclickable">Node id: {{node.id}}</li>
+            <li (click)="onMenuAction('newNode',$event)">New child node</li>
+            <li class="li-flex">
+                <div class="li-title">Color</div> 
+                <input 
+                #colorPicker  
+                type="color"
+                class="color-picker"
+                (input)="onMenuAction('color',$event)"
+                [value]="node.color || '#007bff'">
+            </li>
 
-        <li (click)="onMenuAction('transparent',$event)">{{ node.transparent ? 'Show Background' : 'Hide Background' }}</li>
-        <li (click)="onMenuAction('MinMaximiseTitle',$event)">{{ node.titleMinimized ? 'Show Title' : 'Hide Title' }}</li>   
-        <li (click)="onMenuAction('MinMaximiseContent',$event)">{{ node.contentMinimized ? 'Show Content' : 'Hide Content' }}</li>
-        <li (click)="onMenuAction('MinMaximiseChildrenTree',$event)">{{ node.hiddenTree ? 'Show Children' : 'Hide Children'}}</li>
-        <li (click)="onMenuAction('DisplayChildrenTreeResume',$event)"
-        class="li-flex">Display tree up to:<input 
-          type="number" 
-          class="tree-depth-input"
-          (change)="onDepthBlur($event)"
-          placeholder="1-99"
-          [value]="treeDisplayDepth"
-          min="1" 
-          max="99"
-          placeholder="1-99"></li>
-        <li (click)="onMenuAction('readonly',$event)">{{ node.locked ? 'Unlock Fields' : 'Lock Fields'}}</li>
-        <li (click)="onMenuAction('deleteNode',$event)">Delete Node</li>
-        <li (click)="onMenuAction('closeMenu',$event)">Close Menu</li>
-
-    </ul>
-</div>
-
-
-@if(showPopupTree){
-    <div class="popup-tree" 
-    [style.left.px]="popupX" 
-    [style.top.px]="popupY"
-    [style.border]="'2px solid ' + node.color">
-        <button class="close" (click)="showPopupTree = false" [style.background]="node.color">×</button>
-        <div class="tree-txt">{{getTreeHtlm()}}</div>
+            <li (click)="onMenuAction('transparent',$event)">{{ node.transparent ? 'Show Background' : 'Hide Background' }}</li>
+            <li (click)="onMenuAction('MinMaximiseTitle',$event)">{{ node.titleMinimized ? 'Show Title' : 'Hide Title' }}</li>   
+            <li (click)="onMenuAction('MinMaximiseContent',$event)">{{ node.contentMinimized ? 'Show Content' : 'Hide Content' }}</li>
+            <li (click)="onMenuAction('MinMaximiseChildrenTree',$event)">{{ node.hiddenTree ? 'Show Children' : 'Hide Children'}}</li>
+            <li (click)="onMenuAction('DisplayChildrenTreeResume',$event)"class="li-flex">Display tree up to:
+                <input 
+                type="number" 
+                class="nb-input"
+                (change)="onDepthChange($event)"
+                [value]="treeDisplayDepth"
+                min="1" 
+                max="999">
+            </li>
+            <li (click)="onMenuAction('readonly',$event)">{{ node.locked ? 'Unlock Fields' : 'Lock Fields'}}</li>
+            @if (this.node.id !== 0){
+                <li (click)="onMenuAction('newParent',$event)"
+                class="li-flex">New parent id: 
+                    <input 
+                    type="number" 
+                    class="nb-input"
+                    (change)="onNewParentChange($event)"
+                    [value]=" newParentID>=0 ? newParentID : '' "
+                    min="0">
+                </li>
+                <li (click)="onMenuAction('deleteNode',$event)">Delete Node</li>
+            }
+            <li (click)="onMenuAction('closeMenu',$event)">Close Menu</li>
+        </ul>
     </div>
+
+    @if(showPopupTree){
+        <div class="popup-tree" 
+        [style.left.px]="popupX" 
+        [style.top.px]="popupY"
+        [style.border]="'2px solid ' + node.color">
+            <button class="close" (click)="showPopupTree = false" [style.background]="node.color">×</button>
+            <div class="tree-txt">{{getTreeHtlm()}}</div>
+        </div>
+    }
 }

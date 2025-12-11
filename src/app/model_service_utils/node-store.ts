@@ -55,6 +55,19 @@ export class NodeStoreService {
     );
   }
 
+  assignNewParentToNode(nodeId: number, newParentNodeId: number){
+    if (nodeId == newParentNodeId || nodeId == 0) return; // Prevent setting itself as parent
+    const nodeToMod = this.nodesMap.get(nodeId);
+    if (!nodeToMod) return;
+    const actualParent = this.nodesMap.get(nodeToMod.parentNodeId);
+    if (!actualParent) return;
+    const newParent = this.nodesMap.get(newParentNodeId);
+    if (!newParent) return;
+
+    nodeToMod.parentNodeId = newParentNodeId;
+    this.emitObservableNodesMap();
+  }
+
   getCurrentMap(): Map<number, NodeDataModel> {
     return this.nodesMap;
   }

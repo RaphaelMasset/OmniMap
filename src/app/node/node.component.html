@@ -14,15 +14,16 @@ class="node-container"
 
   <input 
   #titleArea
+  type="text" 
+  class="title-area"
+  placeholder="Title"  
   pattern="[\x00-\x7F]*"
   [readonly]="node.locked"
+  [hidden]="node.titleMinimized" 
+  [value]="node.title"
+  maxlength="100"
   [style.border-top]="node.transparent ? '1px solid rgb(0, 0, 0, 0.1)' : 'null'"
   [class.locked]="node.locked"
-  type="text" 
-  [hidden]="node.titleMinimized" 
-  placeholder="Title"  
-  class="title-area"
-  [value]="node.title"
   (mousedown)="null"
   (input)="updateTitle($event)">
 
@@ -37,7 +38,7 @@ class="node-container"
   <app-node-menu 
   #menu
   [hidden]="!menuVisible"
-  [node]="node"
+  [nodeId]="node.id"
   [style.left.px]="menuX"
   [style.top.px]="menuY"
   (evNewChildNodeClicked)="newChildNodeClicked()"

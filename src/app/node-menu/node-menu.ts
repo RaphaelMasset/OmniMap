@@ -12,15 +12,17 @@ import { Subscription } from 'rxjs';
   styleUrl: './node-menu.scss'
 })
 export class NodeMenu {
-  @Input() node!: NodeDataModel;
-
+  @Input() nodeId!: number;
   @Output() evNewChildNodeClicked = new EventEmitter<void>();
   @Output() evDeleteNodeClicked = new EventEmitter<void>();
   @Output() evCloseMenuClicked = new EventEmitter<void>();
 
+  node! : NodeDataModel;
+
   titleMinimised = false;
   textMinimised = false;
   treeDisplayDepth = 6;
+  newParentID :number = -1;
 
   showPopupTree = false;
   popupX = 0;
@@ -30,14 +32,26 @@ export class NodeMenu {
   constructor(private nodeStoreService: NodeStoreService) {}
 
   private treeSub?: Subscription;
+  private nodeSub?: Subscription;
   
   ngOnInit() {
-    this.setNodeTree();
-    this.treeSub = this.nodeStoreService.nodes$.subscribe(() => {
-      if (this.showPopupTree) {
-        this.setNodeTree();  // Rebuild tree when nodes change
+    
+    this.nodeSub = this.nodeStoreService.node$(this.nodeId).subscribe((node) => {
+      
+      if (node) {
+        console.log('subbbs');
+        this.node=node;
       }
     });
+    console.log('node-menu ngOnInit nodeId=',this.nodeId);
+    if (this.node){
+      this.setNodeTree();
+      this.treeSub = this.nodeStoreService.nodes$.subscribe(() => {
+        if (this.showPopupTree) {
+          this.setNodeTree();  // Rebuild tree when nodes change
+        }
+      });
+    }
   }
   
   ngOnDestroy() {
@@ -56,15 +70,17 @@ export class NodeMenu {
         break;
 
       case 'color':
-        this.node.color = input.value;
+        this.nodeStoreService.updateNode(this.nodeId, { color: input.value });
         break;
 
       case 'MinMaximiseTitle':
-        this.node.titleMinimized = !this.node.titleMinimized;
+        //this.node.titleMinimized = !this.node.titleMinimized;
+        this.nodeStoreService.updateNode(this.nodeId, { titleMinimized: !this.node.titleMinimized });
         break;
 
       case 'MinMaximiseContent':
-        this.node.contentMinimized = !this.node.contentMinimized;
+        //this.node.contentMinimized = !this.node.contentMinimized;
+        this.nodeStoreService.updateNode(this.nodeId, { contentMinimized: !this.node.contentMinimized });
         break;
 
       case 'deleteNode':
@@ -73,11 +89,14 @@ export class NodeMenu {
         break;
 
       case 'transparent':
-        this.node.transparent = !this.node.transparent;
+        //this.node.transparent = !this.node.transparent;
+        this.nodeStoreService.updateNode(this.nodeId, { transparent: !this.node.transparent });
+
         break;
 
       case 'readonly':
-        this.node.locked = !this.node.locked;
+        //this.node.locked = !this.node.locked;
+        this.nodeStoreService.updateNode(this.nodeId, { locked: !this.node.locked });
         break;
 
       case 'closeMenu':
@@ -85,16 +104,26 @@ export class NodeMenu {
         break;
       
       case 'MinMaximiseChildrenTree':
-        this.node.hiddenTree = !this.node.hiddenTree;
+        //this.node.hiddenTree = !this.node.hiddenTree;
+        this.nodeStoreService.updateNode(this.nodeId, { hiddenTree: !this.node.hiddenTree });
         this.nodeStoreService.updateHiddenNodeList();
        // this.evEditHiddenTree.emit();//TODO remove
         break;
 
       case 'DisplayChildrenTreeResume':
         const mouseEvent = event as MouseEvent; 
+        this.setNodeTree();
         this.popupX = mouseEvent.clientX + 10;
         this.popupY = mouseEvent.clientY;
         this.showPopupTree = true;
+        break;
+
+      case 'newParent':
+        if(this.newParentID>=0 && this.newParentID!=this.node.parentNodeId){
+          console.log('current '+this.node.parentNodeId+' - new parent'+this.newParentID)
+          this.nodeStoreService.assignNewParentToNode(this.node.id, this.newParentID);
+          //this.node.parentNodeId = this.newParentID;
+        }
         break;
 
       default:
@@ -105,10 +134,17 @@ export class NodeMenu {
     this.nodeStoreService.setSelectedNode(this.node.id);
   }
 
-  onDepthBlur(event: Event) {
+  onDepthChange(event: Event) {
     const input = event.target as HTMLInputElement;
-    let pasedTreeDisplayDepth = parseInt(input.value, 10);  
-    this.treeDisplayDepth = pasedTreeDisplayDepth;
+    let parsedTreeDisplayDepth = parseInt(input.value, 10);  
+    this.treeDisplayDepth = parsedTreeDisplayDepth;
+  }
+
+  onNewParentChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    let parsedNewParentID = parseInt(input.value, 10); 
+    console.log('onNewParentChange parsedNewParentID=',parsedNewParentID); 
+    this.newParentID = parsedNewParentID;
   }
 
   setNodeTree() {
