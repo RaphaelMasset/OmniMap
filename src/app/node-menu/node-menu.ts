@@ -70,7 +70,12 @@ export class NodeMenu {
         break;
 
       default:
-        console.warn('Unknown action:', action);
+        console.warn('Unknown action:', action);      
+        
+      
     }
+    //because we modified a node, he is the selected node
+    //we need to update the hidden tree variable
+    this.nodeStoreService.setSelectedNode(this.node.id);
   }
 }

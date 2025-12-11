@@ -36,11 +36,6 @@ export class Node {
 
   constructor(private nodeStoreService: NodeStoreService) {}
 
-  onSetColor(newColor: string) {
-    this.node.color = newColor;
-   // this.menuVisible = false;
-  }
-
   newChildNodeClicked() {
     this.hideMenu()
   }
@@ -54,20 +49,13 @@ export class Node {
 
   hideMenu(){this.menuVisible = false;}
   
-  onMinimise() {
-    console.log('minimise event received');
-    this.menuVisible = false;
-  }
-
   @HostListener('document:mousedown', ['$event'])
   onClickDocument(event: MouseEvent) {
-
     if (this.menuVisible && this.menuElement.nativeElement) {
       if (!this.menuElement.nativeElement.contains(event.target)) {
         this.menuVisible = false;
       }
     }
-  
   }
 
   @HostListener('document:contextmenu', ['$event'])

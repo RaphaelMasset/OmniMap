@@ -161,23 +161,10 @@ export class NodeStoreService {
     this.emitObservableNodesMap(); // Trigger change detection
   }
   
-  /**
-   * Recursively add all children IDs of given parent to list
-   * @param list - Array to populate
-   * @param idParent - Parent node ID
-   */
-  private pushAllChildrenNodeinGivenList(list: number[], idParent: number): void {
-    for (const node of this.getCurrentNodesArray()) {
-      if (node.parentNodeId === idParent) {
-        this.pushAllChildrenNodeinGivenList(list, node.id);
-        list.push(node.id);
-      }
-    }
-  }
 
 
   
-  // Call this when a node is clicked
+  // Call this when a node is clicked or when hidden tree is updated
   setSelectedNode(id: number): void {
     const node = this.nodesMap.get(id);
     if (!node) {
@@ -288,6 +275,21 @@ export class NodeStoreService {
     this.nodesMap.delete(id);
     this.emitObservableNodesMap();
   }
+
+  /**
+   * Recursively add all children IDs of given parent to list
+   * @param list - Array to populate
+   * @param idParent - Parent node ID
+   */
+  private pushAllChildrenNodeinGivenList(list: number[], idParent: number): void {
+    for (const node of this.getCurrentNodesArray()) {
+      if (node.parentNodeId === idParent) {
+        this.pushAllChildrenNodeinGivenList(list, node.id);
+        list.push(node.id);
+      }
+    }
+  }
+
   
   // Recursive helper to remove children of a node
   recursiveRemoveNodeAndChildren(parentId: number): void {
