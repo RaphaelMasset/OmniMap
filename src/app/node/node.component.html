@@ -32,7 +32,6 @@ class="node-container"
   [hidden]="node.contentMinimized" 
   #textArea 
   [node]="node"
-  [contentLocked]="node.locked"
   [scale]="scale"/>
 
   <app-node-menu 
@@ -47,6 +46,3 @@ class="node-container"
   </app-node-menu>
   <div #resizinghandle class="resizinghandle" ></div>
 </div>
-
-
-<!--(evEditHiddenTree)="onEditHiddenTree()"-->

@@ -13,30 +13,35 @@ class="context-menu">
             (input)="onMenuAction('color',$event)"
             [value]="node.color || '#007bff'">
         </li>
-        <!-- +$ is need to convert string into a number -->
-        <!--li class="li-flex">
-            <div class="li-title">Opacity</div>
-            
-            <div class="opacity-picker-displayer-container">
-                <input 
-                type="range" 
-                class="opacity-picker"
-                min="0" 
-                max="100" 
-                step="1" 
-                [value]="opacity"             
-                (input)="opacity = +$event.target.value">
-                <div class="opacity-displayer">{{opacity}} %</div>
-            </div>
-        </li-->
+
         <li (click)="onMenuAction('transparent',$event)">{{ node.transparent ? 'Show Background' : 'Hide Background' }}</li>
         <li (click)="onMenuAction('MinMaximiseTitle',$event)">{{ node.titleMinimized ? 'Show Title' : 'Hide Title' }}</li>   
         <li (click)="onMenuAction('MinMaximiseContent',$event)">{{ node.contentMinimized ? 'Show Content' : 'Hide Content' }}</li>
         <li (click)="onMenuAction('MinMaximiseChildrenTree',$event)">{{ node.hiddenTree ? 'Show Children' : 'Hide Children'}}</li>
+        <li (click)="onMenuAction('DisplayChildrenTreeResume',$event)"
+        class="li-flex">Display tree up to:<input 
+          type="number" 
+          class="tree-depth-input"
+          (change)="onDepthBlur($event)"
+          placeholder="1-99"
+          [value]="treeDisplayDepth"
+          min="1" 
+          max="99"
+          placeholder="1-99"></li>
         <li (click)="onMenuAction('readonly',$event)">{{ node.locked ? 'Unlock Fields' : 'Lock Fields'}}</li>
         <li (click)="onMenuAction('deleteNode',$event)">Delete Node</li>
-        <li class="tooltip">Show children list<span class="tooltiptext">This is the info bubble</span></li>
         <li (click)="onMenuAction('closeMenu',$event)">Close Menu</li>
 
     </ul>
 </div>
+
+
+@if(showPopupTree){
+    <div class="popup-tree" 
+    [style.left.px]="popupX" 
+    [style.top.px]="popupY"
+    [style.border]="'2px solid ' + node.color">
+        <button class="close" (click)="showPopupTree = false" [style.background]="node.color">×</button>
+        <div class="tree-txt">{{getTreeHtlm()}}</div>
+    </div>
+}

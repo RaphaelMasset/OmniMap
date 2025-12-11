@@ -2,17 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { NodeDataModel } from './node-data.model';
-
-interface TreeNode {
-  title: string;
-  children: TreeNode[];
-}
-
-export interface SelectedNodeInfo {
-  id: number;
-  title: string;
-  hiddenTree: boolean;
-}
+import * as CONST from '../model_service_utils/const';
 
 @Injectable({ providedIn: 'root' })
 export class NodeStoreService {
@@ -28,7 +18,7 @@ export class NodeStoreService {
 
   //pour exposer un BehaviorSubject  uniquement en tant qu’Observable.
   nodes$ = this.nodesMapSubject.asObservable();
-  private selectedNodeSubject =new BehaviorSubject<SelectedNodeInfo | null>(null);
+  private selectedNodeSubject =new BehaviorSubject<CONST.SelectedNodeInfo | null>(null);
   selectedNode$ = this.selectedNodeSubject.asObservable();
 
 
@@ -83,20 +73,7 @@ export class NodeStoreService {
     );
   }
 
-  // Build hierarchical tree of nodes under rootId
-  buildTree(rootId: number): TreeNode | null {
-    const rootNode = this.nodesMap.get(rootId);
-    if (!rootNode) return null;
-    const buildRec = (node: NodeDataModel): TreeNode => {
-      const nodesArray = this.getCurrentNodesArray()
-        .filter(n => n.parentNodeId === node.id);
-      return {
-        title: node.title,
-        children: nodesArray.map(buildRec)
-      };
-    };
-    return buildRec(rootNode);
-  }
+
 
   // Helper to emit changes (create new Map to trigger change detection)
   private emitObservableNodesMap(): void {
@@ -180,7 +157,7 @@ export class NodeStoreService {
   }
   
   // Optional getter if you need sync access
-  getSelectedNodeSnapshot(): SelectedNodeInfo | null {
+  getSelectedNodeSnapshot(): CONST.SelectedNodeInfo | null {
     return this.selectedNodeSubject.value;
   }
 
@@ -300,5 +277,40 @@ export class NodeStoreService {
       }
     }
     this.nodesMap.delete(parentId) 
+  }
+
+  buildTree(rootId: number, maxDepth: number = 6): CONST.NodeTree | null {
+    const rootNode = this.nodesMap.get(rootId);
+    if (!rootNode) return null;
+  
+    const buildRecursively = (nodeId: number, currentDepth: number = 0): CONST.NodeTree => {
+      const node = this.nodesMap.get(nodeId)!;
+      // Si on atteint le niveau 7 → on tronque
+      if (currentDepth >= maxDepth) {
+        return {
+          id: node.id,  // ID spécial pour tronqué
+          title: "...",  // ✅ "..." au lieu du titre
+          children: [],  // Pas d'enfants
+          isTruncated: true  // Flag pour styler différemment
+        };
+      }
+      
+      const childrenNodeIds = Array.from(this.nodesMap.values())
+        .filter(n => n.parentNodeId === nodeId)
+        .map(n => n.id);
+  
+      const children = childrenNodeIds.map(childId => 
+        buildRecursively(childId, currentDepth + 1)
+      );
+  
+      return {
+        id: node.id,
+        title: node.title,
+        children,
+        isTruncated: false
+      };
+    };
+  
+    return buildRecursively(rootId, 0);
   }
 }

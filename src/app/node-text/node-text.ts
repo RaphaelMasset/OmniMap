@@ -18,14 +18,9 @@ import { ClickableRef } from './inline-refToNode'; // adjust path
 export class NodeText implements OnInit, OnDestroy, OnChanges {
   @Input() node!: NodeDataModel;
   @Input() scale!: number;
-  @Input() contentLocked!: boolean; //TODO Useless
   @ViewChild('editor') editorElement!: ElementRef;
 
   markdownImageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
-
-  //<img src="https://placehold.co/600x400" alt="exemple" />
-  //![image](bezier-anim-controlpoints.jpg)
-  //![image](https://placehold.co/600x400)
   
   editor!: Editor; // Added ! to indicate definite assignment
 
@@ -33,12 +28,6 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
     setTimeout(() => {
       this.initEditor();
     });
-    //tres moooooche
-    /*setInterval(() => {
-        if (!this.node) return;
-          this.editor.setEditable(!this.node.locked);
-        
-      }, 100); // toutes les 100ms*/
 
   }
   //changement externe ex chargement CSV

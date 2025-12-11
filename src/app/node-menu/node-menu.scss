@@ -30,6 +30,7 @@
     box-sizing: border-box; /* include padding in width */
     display: flex;
     align-items: center;
+    gap: 4px;
     
     .li-title{
       flex: 0 0 auto;
@@ -42,7 +43,18 @@
       max-width: 50%;
       max-height: 25px;
       border: none;
+      margin-top: -5px; //necessary so that this button dotn appear thicker than others
+      margin-bottom: -5px;
     }
+
+    .tree-depth-input{
+      flex: 1 1 auto;
+      max-width: 18%;
+      max-height: 25px;
+      padding: 0px;
+      font-size: 0.8rem;
+    }
+
     .opacity-picker-displayer-container{
       flex: 1 1 auto;
       position: relative;
@@ -102,3 +114,45 @@ li.tooltip:hover .tooltiptext {
   visibility: visible;
   opacity: 1;
 }
+
+
+.popup-tree {
+  position: fixed;
+  width: 200px;        /* Fixed width */
+  height: 300px;       /* Fixed height */
+  max-width: 100vw;    /* Don't exceed viewport */
+  max-height: 80vh;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  z-index: 5;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+
+  .close {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 1.2em;
+    background: #000000;
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    //border-radius: 50%;
+    cursor: pointer;
+  }
+  
+  .tree-txt {
+    flex: 1;             /* Take all available space */
+    overflow: auto;      /* Scrollbars when needed */
+    white-space: pre;    /* Preserve \n and spaces */
+    color: black;
+    font-family: monospace;
+    line-height: 1.4;
+  }
+}
+
+
+
