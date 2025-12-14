@@ -248,8 +248,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   showMenu(){
     this.menuVisible = !this.menuVisible;
-
-  
   }
 
   onFileSelected(event: Event){ 
@@ -402,8 +400,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.translateY = offsetY - preZoomY * this.scale;
     this.translateScale();
   };
-
-
 
 /**
  * return input node if no parent
@@ -660,14 +656,16 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     return line;
   }
 
+  getHalfDiagOfNode(node: NodeDataModel){
+    return Math.sqrt(node.width**2 + node.height**2)/2;
+  }
+
   isLineLongEnoughToDisplayNodesTitles(childNode: NodeDataModel){
     const line = this.getLineFromGivenNodeToParent(childNode);
     const linelen = line.getLength();
     const parentNode = this.nodeStoreService.getParentNode(childNode);
-    const lenHalfDiagChild = Math.sqrt(childNode.width**2 + childNode.height**2)/2;
-    const lenHalfDiagParent = Math.sqrt(parentNode.width**2 + parentNode.height**2)/2;
     //check that the line is long enough so that its hard to see the paretn and that its longeur than the node diagonals length plus a margin
-    return linelen > 500 && (linelen > CONST.NODE_LINE_TEXT_MARGIN + lenHalfDiagChild + lenHalfDiagParent) ;
+    return linelen > 500 && (linelen > CONST.NODE_LINE_TEXT_MARGIN + this.getHalfDiagOfNode(childNode) + this.getHalfDiagOfNode(parentNode)) ;
   }
 
   getTriAndTitles(childNode: NodeDataModel, side = 10) {
@@ -678,10 +676,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const lineLen = line.getLength();
     
     // Distance du sommet du triangle depuis le centre de l'enfant
-    const lenHalfDiagChild = Math.sqrt(childNode.width**2 + childNode.height**2)/2;
-    const lenHalfDiagParent = Math.sqrt(parentNode.width**2 + parentNode.height**2)/2;
-    const distTriangleFromChildCntr = lenHalfDiagChild + CONST.NODE_LINE_TEXT_MARGIN;
-    const distTriangleFromParentCntr = lenHalfDiagParent + CONST.NODE_LINE_TEXT_MARGIN;
+    const distTriangleFromChildCntr = this.getHalfDiagOfNode(childNode) + CONST.NODE_LINE_TEXT_MARGIN;
+    const distTriangleFromParentCntr = this.getHalfDiagOfNode(parentNode) + CONST.NODE_LINE_TEXT_MARGIN;
 
     
     // Vérifie si le triangle peut être affiché
@@ -712,5 +708,44 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   get hiddenNodeIds(): number[] {
     return this.nodeStoreService.hiddenNodeIds;;
   }
+
+  truncateSvgText(
+    textEl: HTMLElement, // the <text> element to measure
+    node: NodeDataModel,
+    isChild: boolean      // original string
+  ):string{
+
+    const line = this.getLineFromGivenNodeToParent(node);
+    const lineLen = line.getLength();
+    
+
+    const parentNode = this.getParentNode(node);
+
+    let text = isChild ? node.title : parentNode.title;
+
+    //const el = document.querySelector('text'); // your SVG text element
+    const style = getComputedStyle(textEl as Element);
+    const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+
+    const maxPx = (lineLen - CONST.NODE_LINE_TEXT_MARGIN*2 - this.getHalfDiagOfNode(node) - this.getHalfDiagOfNode(parentNode))/2;
+    console.log('maxPx for', text ,maxPx)
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d')!;
+    ctx.font = font;
+
+    if (ctx.measureText(text).width <= maxPx) return text;
+
+    while (text.length > 1) {
+      text = text.slice(0, -1);          // remove last char
+      const textEllipsis = text + '…';// add ellipsis
+      if (ctx.measureText(textEllipsis).width <= maxPx) {
+        text = textEllipsis;
+        break;   
+      };
+    }
+
+    return text;
+  }
+
 
 }

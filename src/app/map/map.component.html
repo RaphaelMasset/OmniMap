@@ -51,23 +51,25 @@
                     stroke-width="1"/>
 
                     <text
+                    #ParentLineTextEl
                     class="line-node-title"
                     [attr.x]="getTriAndTitles(node)?.titleChXY?.x"
                     [attr.y]="getTriAndTitles(node)?.titleChXY?.y"
                     [attr.transform]="getTriAndTitles(node)?.rotCh"
                     text-anchor="end"
                     dominant-baseline="baseline">
-                    {{getParentNode(node).title}}
+                    {{truncateSvgText(ParentLineTextEl,node,false)}}
                     </text>
 
                     <text
+                    #ChildLineTextEl
                     class="line-node-title"
                     [attr.x]="getTriAndTitles(node)?.titlePaXY?.x"
                     [attr.y]="getTriAndTitles(node)?.titlePaXY?.y"
                     [attr.transform]="getTriAndTitles(node)?.rotPa"
                     text-anchor="start"
                     dominant-baseline="baseline">
-                    {{node.title}}
+                    {{truncateSvgText(ChildLineTextEl,node,true)}}
                     </text>
                 }
             }
