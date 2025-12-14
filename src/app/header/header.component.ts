@@ -41,11 +41,11 @@ export class HeaderComponent implements  OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  getext(){
-    const txt = this.lastClickedNodeTitle ?
-      `Last node: ${this.lastClickedNodeTitle} ${this.hiddenChildren?'(Have hidden Children!)':''}` :
-      ``
-      return txt;
+  getTitle(){
+    return this.lastClickedNodeTitle ? `Last node: ${this.lastClickedNodeTitle}` :``;
+  }
+  getAlertForHiddenChildren(){
+    return this.hiddenChildren?'(Have hidden Children!)':''
   }
 
   downloadCicked(){

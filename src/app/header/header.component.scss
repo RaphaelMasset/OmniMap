@@ -1,54 +1,63 @@
-.outside-header
-{
+.outside-header {
   padding: 5px;
 }
+
 .inside-header {
-  background-color: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   width: 100%;
+  background-color: rgba(255, 255, 255, 0.2);
   border-top: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
   padding: 1px;
+  gap: 5px;
 }
 
-h1,h2,h3{
-  padding: 1px;
-  padding-left: 5px;
+h1, h2, h3 {
+  padding: 1px 0 1px 5px;
   margin: 1px;
-  justify-content: baseline;
-
 }
 
 h1 {
-  flex: 1;
+  flex: none; // equivalent to 0 0 auto
   text-align: left;
   font-size: clamp(20px, 2vw, 35px);
 }
 
-h2 {
-  flex: 2;
-  text-align: right;
-  font-size: clamp(17px, 2vw, 30px);
+.selected-node-title,
+.selected-node-hiddenChildrenAlert {
+  flex-shrink: 1;   // allow shrinking
+  min-width: 0;     // needed for ellipsis
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: clamp(17px, 2vw, 30px);
 }
 
 .selected-node-title {
-  flex: 5;
-  text-align: left;
-  color: rgb(0, 0, 0);
+  color: #000;
+}
+
+.selected-node-hiddenChildrenAlert {
+  color: #f00;
 }
 
 img {
   width: clamp(30px, 2vw, 40px);
   height: clamp(30px, 2vw, 40px);
   object-fit: contain;
-  transition: transform 0.2s ease;
-  transform-origin: center center;
   margin: 1px;
   padding: 1px;
+  transition: transform 0.2s ease;
+  transform-origin: center center;
+}
+
+.menuButton {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin-left: auto; // pushes this container to the right
+  padding: 0;
 }
 
 button {
@@ -58,35 +67,32 @@ button {
   padding: 0;
   margin: 1px 5px;
   background-color: #fff;
-  border: 2px solid transparent; /* reserve border space */
+  border: 2px solid transparent;
   cursor: pointer;
   user-select: none;
   outline: none;
   transition: transform 0.2s ease, border-color 0.2s ease;
-}
 
-button:hover,
-button:hover img {
-  transform: scale(1.07);
-}
+  &:hover,
+  &:hover img {
+    transform: scale(1.07);
+    border-color: rgb(143, 143, 143);
+  }
 
-button:hover {
-  border-color: rgb(143, 143, 143);
-}
+  &:active {
+    transform: scale(1);
+    border-color: rgb(143, 143, 143);
+    transition: none;
 
-button:active {
-  border-color: rgb(143, 143, 143);
-  transition: none; /* disable transitions on click */
-  transform: scale(1);
-}
+    img {
+      transform: scale(1);
+      background-color: transparent;
+      box-shadow: none;
+    }
+  }
 
-button:active img {
-  transform: scale(1);
-  background-color: transparent;
-  box-shadow: none;
-}
-
-button:focus {
-  outline: none;
-  box-shadow: none;
+  &:focus {
+    outline: none;
+    box-shadow: none;
+  }
 }

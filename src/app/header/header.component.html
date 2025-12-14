@@ -2,16 +2,19 @@
     <div class="inside-header">
         <img src="assets/mapIconeTransp.png" alt="">
         <h1>OmniMap</h1>
-        <h2 class="selected-node-title">{{getext()}}</h2>
-        <button (click)="triggerFileInput()"><img src="assets/upcsv.png" alt="upload csv"></button>    
-        <button (click)="downloadCicked()"><img src="assets/downcsv.png" alt="download csv" ></button>
-        <button class="menu-icon" (click)="menuButtonClicked()">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-        </button>
+        <h2 class="selected-node-title">{{getTitle()}}</h2>
+        <h2 class="selected-node-hiddenChildrenAlert">{{getAlertForHiddenChildren()}}</h2>
+        <div class="menuButton">
+            <button (click)="triggerFileInput()"><img src="assets/upcsv.png" alt="upload csv"></button>    
+            <button (click)="downloadCicked()"><img src="assets/downcsv.png" alt="download csv" ></button>
+            <button class="menu-icon" (click)="menuButtonClicked()">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+            </button>
+        </div>
     </div>
 </div>
 
