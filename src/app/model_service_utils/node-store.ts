@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { NodeDataModel } from './node-data.model';
 import * as CONST from '../model_service_utils/const';
+import { Line } from '../model_service_utils/Line';
 
 @Injectable({ providedIn: 'root' })
 export class NodeStoreService {
@@ -190,12 +191,18 @@ export class NodeStoreService {
     if (!parentNode) return null!;
     
     const newNodeId = this.generateNewId();
+
+    const siblings = this.getSiblingsByParent(parentNode.id);
+
+    const pos = this.getNewSiblingPosition(parentNode, siblings);
+
+    console.log(pos)
     
     const newNode: NodeDataModel = this.createAddAndReturnNewNode({
       id: newNodeId,
       parentNodeId: parentNode.id,
-      x: parentNode.x + parentNode.width + 20,
-      y: parentNode.y + parentNode.height + 20,
+      x: pos.x,
+      y: pos.y,
       title: `Node nb ${newNodeId}`,
       color: parentNode.color
     });
@@ -326,4 +333,46 @@ export class NodeStoreService {
   
     return buildRecursively(rootId, 0);
   }
+
+  getSiblingsByParent(parentId: number): NodeDataModel[] {
+    return this.getCurrentNodesArray().filter(node => node.parentNodeId === parentId);
+  }
+
+  getNewSiblingPosition(
+    parent: NodeDataModel,
+    siblings: NodeDataModel[]
+  ): { x: number; y: number } {
+  
+    const cx = parent.x + parent.width / 2;
+    const cy = parent.y + parent.height / 2;
+  
+    // Distance de base : bien dehors du parent
+    const baseDist =
+      Math.sqrt(parent.width * parent.width + parent.height * parent.height) + 20;
+  
+    // Angle de base: 45° = bas‑droite
+    const baseAngle = 45;
+  
+    // Chaque sibling prend 18° de plus dans le sens trigo
+    const step = 18;
+    const index = siblings.length;           // 0 pour le 1er, 1 pour le 2e, etc.
+    const angle = (baseAngle + index * step) % 360;
+  
+    // Distance qui augmente un peu avec le nombre de siblings
+    const dist = baseDist * Math.pow(1.02, index); // +2% par sibling
+  
+    const rad = (angle * Math.PI) / 180;
+    const dx = dist * Math.cos(rad);  // x vers la droite
+    const dy = dist * Math.sin(rad);  // y vers le bas (sens trigo OK)
+  
+    const x = cx + dx - parent.width / 2;
+    const y = cy + dy - parent.height / 2;
+  
+    return { x, y };
+  }
+  
+  
+  
+  
+  
 }

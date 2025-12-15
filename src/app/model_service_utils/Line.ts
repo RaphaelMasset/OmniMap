@@ -67,4 +67,12 @@ export class Line {
   lineAngle(): number {
     return Math.atan2(this.y2 - this.y1, this.x2 - this.x1) * 180 / Math.PI;
   }
+
+  static degToRad(deg: number): number {
+    return deg * Math.PI / 180;
+  }
+  
+  static radToDeg(rad: number): number {
+    return rad * 180 / Math.PI;
+  }
 }

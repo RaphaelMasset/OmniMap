@@ -39,7 +39,7 @@ export class NodeMenu {
     this.nodeSub = this.nodeStoreService.node$(this.nodeId).subscribe((node) => {
       
       if (node) {
-        console.log('subbbs');
+    
         this.node=node;
       }
     });

@@ -678,7 +678,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     // Distance du sommet du triangle depuis le centre de l'enfant
     const distTriangleFromChildCntr = this.getHalfDiagOfNode(childNode) + CONST.NODE_LINE_TEXT_MARGIN;
     const distTriangleFromParentCntr = this.getHalfDiagOfNode(parentNode) + CONST.NODE_LINE_TEXT_MARGIN;
-
     
     // Vérifie si le triangle peut être affiché
     if (distTriangleFromChildCntr + distTriangleFromParentCntr > lineLen) return null;
@@ -697,7 +696,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     };
 
     const titlePaXY = line.getPointAtDistance(distTriangleFromParentCntr);
-
     const angle = line.lineAngle();
     const rotCh = `rotate(${angle} ${titleChXY.x} ${titleChXY.y})`;
     const rotPa = `rotate(${angle} ${titlePaXY.x} ${titlePaXY.y})`;
@@ -713,14 +711,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     textEl: HTMLElement, // the <text> element to measure
     node: NodeDataModel,
     isChild: boolean      // original string
-  ):string{
+  ) :string {
 
     const line = this.getLineFromGivenNodeToParent(node);
     const lineLen = line.getLength();
-    
-
     const parentNode = this.getParentNode(node);
-
     let text = isChild ? node.title : parentNode.title;
 
     //const el = document.querySelector('text'); // your SVG text element
@@ -728,7 +723,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
 
     const maxPx = (lineLen - CONST.NODE_LINE_TEXT_MARGIN*2 - this.getHalfDiagOfNode(node) - this.getHalfDiagOfNode(parentNode))/2;
-    console.log('maxPx for', text ,maxPx)
+
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
     ctx.font = font;
@@ -746,6 +741,4 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     return text;
   }
-
-
 }
