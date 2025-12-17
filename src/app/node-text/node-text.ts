@@ -32,7 +32,16 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
   }
   //changement externe ex chargement CSV
   ngOnChanges(changes: SimpleChanges) {
+    if (!this.editor) return;
 
+    if (changes['node'] && changes['node'].currentValue) {
+      const newText = changes['node'].currentValue.text;
+      if (newText) {
+        this.editor.commands.setContent(JSON.parse(newText));
+      } else {
+        this.editor.commands.clearContent();
+      }
+    }
   }
 
   private initEditor() { 

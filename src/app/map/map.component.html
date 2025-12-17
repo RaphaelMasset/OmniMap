@@ -1,7 +1,7 @@
 <map-header 
 #mapHeader 
-(csvWriteClicked)="writeCsv()" 
-(csvUploadClicked)="uploadCsv()"
+(csvWriteClicked)="writeCsvClicked()" 
+(csvUploadClicked)="uploadCsvClicked()"
 (menuClicked)="showMenu()"/>
 <input type="file" #fileInput accept=".csv,text/csv" style="display: none;" (change)="onFileSelected($event)">
 
