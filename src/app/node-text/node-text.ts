@@ -7,6 +7,14 @@ import Image from '@tiptap/extension-image';
 import { Markdown } from '@tiptap/markdown'
 import { Plugin } from 'prosemirror-state';
 import { ClickableRef } from './inline-refToNode'; // adjust path
+import 'katex/dist/katex.min.css';
+import { InlineMath, BlockMath } from '@tiptap/extension-mathematics';
+import { migrateMathStrings } from '@tiptap/extension-mathematics';
+
+// after editor is created and has content:
+
+
+
 
 @Component({
   selector: 'app-node-text',
@@ -59,7 +67,13 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
         Placeholder.configure({
           placeholder: 'Start writing...'
         }),
-        ClickableRef 
+        ClickableRef,
+        InlineMath.configure({
+            katexOptions: { throwOnError: false },
+          }),
+          BlockMath.configure({
+            katexOptions: { throwOnError: false },
+          })
       ], 
       //set a l.initialisaiton
       content: this.node.text ? JSON.parse(this.node.text) : '',
@@ -83,6 +97,7 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
         },
       },/// EL-318-LH   
       onUpdate: ({ editor }) => {
+        migrateMathStrings(editor);
         this.node.text = JSON.stringify(editor.getJSON());
         //this.JSONtester(editor);
         console.log('editor.getJSON() this',this.editor.getJSON())
