@@ -2,5 +2,32 @@
 
     <li>TODO</li>
     <li>TODO</li>
-    <li>TODO</li>
+    <li (click)="onMenuAction('nodeSearch',$event)"class="li-flex">Search Node title:
+        <input 
+        type="text" 
+        class="nb-input"
+        (click)="$event.stopPropagation()"
+        (change)="onNodeSearchInputChange($event)"
+        [value]="searchText"
+        maxlength="100">
+    </li>
+    <li (click)="onMenuAction('treeSearch',$event)"class="li-flex">Search Node parents:
+        <input 
+        type="number" 
+        class="nb-input"
+        (click)="$event.stopPropagation()"
+        (change)="onTreeSearchInputChange($event)"
+        [value]="searchId"
+        min="1" >
+    </li>
 </ul>
+
+@if(showPopUp){
+    <div class="popup-tree" 
+    [style.position]="'absolute'"
+    [style.right.px]="popupRight" 
+    [style.top.px]="popupTop">
+        <button class="close" (click)="showPopUp = false" >×</button>
+        <div class="tree-txt">{{popUpText}}</div>
+    </div>
+}

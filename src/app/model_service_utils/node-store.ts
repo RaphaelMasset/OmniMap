@@ -370,6 +370,34 @@ export class NodeStoreService {
   
     return { x, y };
   }
+
+  getParentChain(nodeId: number): NodeDataModel[] {
+    const chain: NodeDataModel[] = [];
+    let current = this.nodesMap.get(nodeId);
+  
+    while (current) {
+      chain.push(current);
+      if (current.parentNodeId === -1 || current.parentNodeId === current.id) {
+        break; // reached origin or invalid loop
+      }
+      current = this.nodesMap.get(current.parentNodeId);
+    }
+  
+    return chain; // [child, parent, grandparent, ..., origin]
+  }
+
+  getParentTitlesFromId(id: number): { id: number; title: string }[] {
+    return this.getParentChain(id).reverse().map(n => ({ id: n.id, title: n.title }));
+  }
+
+  getNodeTitlesContaining(query: string): { id: number; title: string }[] {
+    const q = query.toLowerCase().trim();
+    if (!q) return [];
+  
+    return this.getCurrentNodesArray()
+      .filter(n => n.title.toLowerCase().includes(q))
+      .map(n => ({ id: n.id, title: n.title }));
+  }
   
   
 }

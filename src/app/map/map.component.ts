@@ -28,12 +28,14 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   mapContainerCoordXY = { x: 0, y: 0 };
   defaultNodeDim = { w: 100, h: 100 };
   iterationBezier = Array.from({ length: 8 }, (_, i) => i);
+  showPopupTree = false;
 
   @ViewChild('mapOfNodesContainer') mapOfNodesContainer!: ElementRef;
   @ViewChild('mapHeader', { read: ElementRef }) header!: ElementRef;
   @ViewChild('fileInput', { read: ElementRef }) fileInput!: ElementRef;
   @ViewChild('scalableContainerNode', { read: ElementRef })  scalableContainerNode!: ElementRef;
   @ViewChild('scalableContainerSVGLineAndPath', { read: ElementRef }) scalableSvgGroup!: ElementRef;
+  @ViewChild(Menu, { read: ElementRef }) menuRef!: ElementRef;
 
   @ViewChildren(Node, { read: ElementRef }) nodeElements!: QueryList<ElementRef>;
   @ViewChildren('colorPicker', { read: ElementRef }) colorPickerElements!: QueryList<ElementRef>;
@@ -599,5 +601,27 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
 
     return text;
+  }
+
+  getMenuDim() {
+    // fallback values if menuRef not ready yet
+    const vw = window.innerWidth;
+    if (!this.menuRef) {
+      return {
+        top: 0,
+        right: 0,
+        width: 200,
+        height: 300,
+      };
+    }
+  
+    const rect = this.menuRef.nativeElement.getBoundingClientRect();
+  
+    return {
+      top: rect.top,
+      right: vw-rect.right,   // use right instead of left
+      width: rect.width,
+      height: rect.height,
+    };
   }
 }
