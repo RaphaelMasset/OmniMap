@@ -1,8 +1,29 @@
 # OmniMap
 
-OmniMap is a web application built using Angular, designed to provide an interactive mapping experience with rich note and node management features.
+OmniMap is an interactive mind-mapping and note-taking web application built with Angular 20. Create nodes, connect them with edges, add rich text content with math formulas ($\frac{a}{b}$), images, and more.
+
+Node-based mapping - Drag, connect, and organize ideas visually
+
+Rich text editing - Tiptap editor with headings, lists, images, tasks
+
+Math support - Type $\frac{a}{b}$ or $\int_0^1 x^2 dx$ → instantly renders fractions, integrals, symbols (KaTeX-powered)
+
+Image embedding - Paste `` → converts to images
+
+Node locking - Protect content from editing while allowing copy/paste
+
+Bezier edge animations - Smooth connections between nodes
+
+Fully static - No backend required, runs anywhere
+
+$\frac{a}{b}$          → a/b fraction
+$x^2 + y^2 = r^2$      → circle equation
+$\int_0^\infty e^{-x} dx$ → integral
+$\sum_{n=1}^\infty \frac{1}{n^2}$ → sum
 
 This project was generated using Angular CLI version 20.3.3.
+
+
 
 ## Development server
 
