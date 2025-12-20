@@ -557,12 +557,20 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       y: tri.baseMid.y - tri.vunit.y * 5
     };
 
-    const titlePaXY = line.getPointAtDistance(distTriangleFromParentCntr);
+    const titlePaSideXY = line.getPointAtDistance(distTriangleFromParentCntr);
     const angle = line.lineAngle();
-    const rotCh = `rotate(${angle} ${titleChXY.x} ${titleChXY.y})`;
-    const rotPa = `rotate(${angle} ${titlePaXY.x} ${titlePaXY.y})`;
-    
-    return {triPath, titleChXY, titlePaXY, rotCh, rotPa };
+
+    if(this.isAbsLineAngleGreaterThan90(childNode)){
+      const rotCh = `rotate(${angle+180} ${titleChXY.x} ${titleChXY.y})`;
+      const rotPa = `rotate(${angle+180} ${titlePaSideXY.x} ${titlePaSideXY.y})`;      
+      return {triPath, titlePaSideXY, titleChXY, rotCh, rotPa };
+    }
+    else{
+      const rotCh = `rotate(${angle} ${titleChXY.x} ${titleChXY.y})`;
+      const rotPa = `rotate(${angle} ${titlePaSideXY.x} ${titlePaSideXY.y})`;
+      return {triPath, titleChXY, titlePaSideXY, rotCh, rotPa };
+      
+    }
   }
 
   get hiddenNodeIds(): number[] {
@@ -624,5 +632,14 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       width: rect.width,
       height: rect.height,
     };
+  }
+
+  //return true if coord line of x2 < x1
+  isAbsLineAngleGreaterThan90(childNode: NodeDataModel): boolean {
+    const line = this.getLineFromGivenNodeToParent(childNode);
+    const lineLen = line.getLength();
+    const angle = line.lineAngle();
+
+    return Math.abs(angle)>90
   }
 }

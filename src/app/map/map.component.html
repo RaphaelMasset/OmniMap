@@ -56,7 +56,7 @@
                     [attr.x]="getTriAndTitles(node)?.titleChXY?.x"
                     [attr.y]="getTriAndTitles(node)?.titleChXY?.y"
                     [attr.transform]="getTriAndTitles(node)?.rotCh"
-                    text-anchor="end"
+                    [attr.text-anchor]="isAbsLineAngleGreaterThan90(node) ? 'start' : 'end'"
                     dominant-baseline="baseline">
                     {{truncateSvgText(ParentLineTextEl,node,false)}}
                     </text>
@@ -64,10 +64,10 @@
                     <text
                     #ChildLineTextEl
                     class="line-node-title"
-                    [attr.x]="getTriAndTitles(node)?.titlePaXY?.x"
-                    [attr.y]="getTriAndTitles(node)?.titlePaXY?.y"
+                    [attr.x]="getTriAndTitles(node)?.titlePaSideXY?.x"
+                    [attr.y]="getTriAndTitles(node)?.titlePaSideXY?.y"
                     [attr.transform]="getTriAndTitles(node)?.rotPa"
-                    text-anchor="start"
+                    [attr.text-anchor]="isAbsLineAngleGreaterThan90(node) ? 'end' : 'start'"
                     dominant-baseline="baseline">
                     {{truncateSvgText(ChildLineTextEl,node,true)}}
                     </text>
@@ -94,6 +94,10 @@
 
 
 <!-- 
+
+[attr.text-anchor]="isAbsLineAngleGreaterThan90(node) ? 'start' : 'end'"
+
+
 <circle r="2" [attr.cx]="getAnimChCoord(node).end.x" [attr.cy]="getAnimChCoord(node).end.y" stroke="red" stroke-width="1" fill="none"/>
                     
 <circle r="1" [attr.cx]="getAnimChCoord(node).cPr.x"     [attr.cy]="getAnimChCoord(node).cPr.y"     stroke="red" stroke-width="1" fill="none"/>    

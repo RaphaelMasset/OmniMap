@@ -58,7 +58,6 @@ export class CsvHandler{
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
     
-    
       // Compose le nom du fichier (sans caractères interdits comme /)
       const fileName = `OmniMap_${year}-${month}-${day}_${hours}:${minutes}.csv`;
       //FIN CREA NOM FICHIER
@@ -131,7 +130,7 @@ export class CsvHandler{
 
     decodeTextCell(raw: string | undefined): string {
       const v = raw ? raw.trim() : '';
-      if (!v) return '';            // cellule vide → texte vide
+      if (!v) return ''; // cellule vide → texte vide
     
       try {
         return decodeURIComponent(escape(atob(v)));
@@ -140,5 +139,4 @@ export class CsvHandler{
         return '';
       }
     }
-
 }
