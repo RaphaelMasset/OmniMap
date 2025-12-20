@@ -26,6 +26,22 @@
   pointer-events: auto; 
 }
 
+.movetreehandle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  top: -1px;
+  right: -1px;
+  margin: 0;
+  border: 0px;
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: invert(100%);
+  -webkit-backdrop-filter: invert(100%); /* pour Safari */
+  cursor: all-scroll;
+  pointer-events: auto; 
+}
+
 .node-container .title-area{
   width: 100%;
   box-sizing: border-box;

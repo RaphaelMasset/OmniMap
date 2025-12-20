@@ -22,6 +22,7 @@ export class Node {
   @ViewChild('titleArea') titleArea!: ElementRef;
   @ViewChild('textArea', { read: ElementRef }) textArea!: ElementRef;  // { read: ElementRef } when is an angular component, necessary for certain calls of methods
   @ViewChild('resizinghandle') resizinghandle!: ElementRef;
+  @ViewChild('movetreehandle') movetreehandle!: ElementRef;
   @ViewChild('menu',{ read: ElementRef }) menuElement!: ElementRef;
 
   menuVisible = false;
@@ -30,6 +31,7 @@ export class Node {
 
   private moving = false;
   private resizing = false;
+  private movingWholeTree = false;
   
   private lastX = 0;
   private lastY = 0;
@@ -94,12 +96,21 @@ export class Node {
       this.textArea.nativeElement.contains(clickedElement) ||
       this.menuElement.nativeElement.contains(clickedElement) 
       ){return}
-    if (this.clickIsOnHandle(event)){
+
+      
+    if (this.clickIsOnResizingHandle(event)){
       this.moving = false;
       this.resizing = true;
+      this.movingWholeTree = false;
+    }else if (this.clickIsOnMoveTreeHandle(event)){
+      console.log('clickIsOnMoveTreeHandle'+this.clickIsOnMoveTreeHandle(event))
+      this.moving = true;
+      this.resizing = false;
+      this.movingWholeTree = true;
     }else{ 
       this.moving = true;
       this.resizing = false;
+      this.movingWholeTree = false;
     }
     this.lastX = event.clientX;
     this.lastY = event.clientY;
@@ -116,10 +127,14 @@ export class Node {
       this.node.y += dy;
       //console.log('Dragging - dx: '+dx+' dy: '+dy)
     } else if (this.resizing){
+      console.log('Resizing - dx: '+dx+' dy: '+dy)
       const rect = this.nodeContainer.nativeElement.getBoundingClientRect();
       //16 pixel min node size so the handle is clearly vissible and we can click, do a global var
       if ((this.node.width + dx) > CONST.DEFAULT_MIN_NODE_SIZE){this.node.width += dx;} 
       if ((this.node.height + dy)> CONST.DEFAULT_MIN_NODE_SIZE){this.node.height += dy;}
+    }
+    if (this.movingWholeTree){
+      this.nodeStoreService.moveChildrenOfGivenId(this.node.id, dx, dy);
     }
     this.lastX = event.clientX;
     this.lastY = event.clientY; 
@@ -131,14 +146,28 @@ export class Node {
     window.removeEventListener('mouseup', this.onMouseUp);
   };
 
-  clickIsOnHandle(event: MouseEvent) {
+  clickIsOnResizingHandle(event: MouseEvent) {
     const rect = this.resizinghandle.nativeElement.getBoundingClientRect();
     const handleWidth = rect.width;
     const handleHeight = rect.height;
 
     const xOk = event.clientX >= rect.right - handleWidth && event.clientX <= rect.right;
     const yOk = event.clientY >= rect.bottom - handleHeight && event.clientY <= rect.bottom;
-    //console.log(xOk && yOk)
     return xOk && yOk
   }
+
+  clickIsOnMoveTreeHandle(event: MouseEvent) {
+    const rect = this.movetreehandle.nativeElement.getBoundingClientRect();
+    const handleWidth = rect.width;
+    const handleHeight = rect.height;
+  
+    const xOk = event.clientX >= rect.right - handleWidth && event.clientX <= rect.right;
+    const yOk = event.clientY >= rect.bottom - handleHeight && event.clientY <= rect.bottom;
+
+    return xOk && yOk
+  }
+
+
+
+  
 }

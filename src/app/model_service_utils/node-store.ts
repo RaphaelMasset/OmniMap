@@ -370,6 +370,11 @@ export class NodeStoreService {
     return { x, y };
   }
 
+  /**
+   * get all node chain from given to origin
+   * @param nodeId 
+   * @returns 
+   */
   getParentChain(nodeId: number): NodeDataModel[] {
     const chain: NodeDataModel[] = [];
     let current = this.nodesMap.get(nodeId);
@@ -396,6 +401,31 @@ export class NodeStoreService {
     return this.getCurrentNodesArray()
       .filter(n => n.title.toLowerCase().includes(q))
       .map(n => ({ id: n.id, title: n.title }));
+  }
+
+  moveChildrenOfGivenId(nodeId: number,dx: number, dy: number) {
+    let nodeParentTree = this.nodesMap.get(nodeId);
+
+    let listOfNodesToMove: NodeDataModel[] = this.getAllChildren(nodeId);
+    //listOfNodesToMove.push(nodeParentTree);
+    console.log(listOfNodesToMove);
+    listOfNodesToMove.forEach( node => {
+
+      node.x += dx;
+      node.y += dy;
+    })
+
+  }
+
+  getAllChildren(parentId: number): NodeDataModel[] {
+    const treelist: NodeDataModel[] = [];
+    for (const node of this.getCurrentNodesArray()) {
+      if (node.parentNodeId === parentId) {
+        treelist.push(node);
+        treelist.push(...this.getAllChildren(node.id));
+      }
+    }
+    return treelist;
   }
   
   
