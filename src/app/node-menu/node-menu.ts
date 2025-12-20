@@ -43,7 +43,6 @@ export class NodeMenu {
         this.node=node;
       }
     });
-    console.log('node-menu ngOnInit nodeId=',this.nodeId);
     if (this.node){
       this.setNodeTree();
       this.treeSub = this.nodeStoreService.nodes$.subscribe(() => {

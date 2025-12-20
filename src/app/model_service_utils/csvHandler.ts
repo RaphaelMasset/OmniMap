@@ -3,17 +3,17 @@ import { NodeDataModel } from '../model_service_utils/node-data.model';
 
 export class CsvHandler{
 
-    constructor(private nodeStoreService: NodeStoreService) { }
+  node0! :NodeDataModel;
+
+    constructor(private nodeStoreService: NodeStoreService) {
+      this.node0 = this.nodeStoreService.originNode;
+     }
     /**
      * Use node map to write a CSV file and trigger download
      */
     writeCsv(){
-      //create a list of header by getting the keys of hte node object
-      // Get node with id 0 via the service
-      const node0 = this.nodeStoreService.getNodeSnapshot(0);
-      
       // Get headers (property names) from node0, or an empty array if not found
-      const headers = node0 ? Object.keys(node0) : [];
+      const headers = this.node0 ? Object.keys(this.node0) : [];
       //conver teh map of objet to a list of object
       const nodeArray = this.nodeStoreService.getCurrentNodesArray();
       /*
@@ -39,7 +39,6 @@ export class CsvHandler{
       csvRows.forEach(e=> console.log(e))
     
       const csvString = csvRows.join('\n');
-      //console.log(nodeArray)
       
       // Création d'un Blob contenant le CSV
       const blob = new Blob([csvString], { type: 'text/csv' });
@@ -77,9 +76,7 @@ export class CsvHandler{
 
     readCsvFile(file: File) {
       const reader = new FileReader();
-      //console.log('readCsvFile before .onload')
       reader.onload = () => {
-        //console.log('readCsvFile inside .onload')
         const csvText = reader.result as string;
         const lines = csvText.split('\n');  //CSV text string into an array of lines
         this.nodeStoreService.clearAll();
@@ -91,22 +88,14 @@ export class CsvHandler{
       reader.onabort = () => console.warn('File reading aborted');
     }
     
-    csvToMapWithHeader(lines: string[]) {
-    
+    csvToMapWithHeader(lines: string[]) { 
       if (lines.length === 0){console.log('csvToMapWithHeader - no lines'); return ;};
-      const header = lines[0].split(','); // Get column names from first line
-    
-      //get header index and return the string at this index for the given line
+      const header = lines[0].split(','); 
+
       function getValue(columns: string[], name: string): string | undefined {
         const index = header.indexOf(name);
-        //console.log(columns[index])
         if (index === -1) return undefined;
-        //if (name === 'text')console.log('getValue',stripQuotes(columns[index]))
-        return stripQuotes(columns[index]);
-      }
-    
-      function stripQuotes(value: string): string {
-        if (!value) return value;
+        const value = columns[index]
         if (value.startsWith('"') && value.endsWith('"')) {
           return value.slice(1, -1);
         }     
@@ -115,31 +104,33 @@ export class CsvHandler{
     
       for (let i = 1; i < lines.length; i++) {
         const nodeIValues = lines[i].split(',');
-    
-        const idStr = getValue(nodeIValues, 'id');
-        if (!idStr){
-          //console.log('line '+i+' id is invalid-skip')
-          continue;
-        } 
-        const nodeI: NodeDataModel = this.nodeStoreService.createAddAndReturnNewNode({
-          id: Number(idStr),
-          parentNodeId: Number(getValue(nodeIValues, 'parentNodeId')),
-          x: Number(getValue(nodeIValues, 'x')),
-          y: Number(getValue(nodeIValues, 'y')),
-          width: Number(getValue(nodeIValues, 'width')),
-          height: Number(getValue(nodeIValues, 'height')),
-          title: getValue(nodeIValues, 'title') || '',
-          color: getValue(nodeIValues, 'color') || '',
-          text: this.decodeTextCell(getValue(nodeIValues, 'text'))
-        })
-        console.log('node.text apres lecture csv',nodeI.text)
-        this.nodeStoreService.upsertNode(nodeI);
+
+        const protoNode: Partial<NodeDataModel> = Object.fromEntries(
+          header.map(k => {
+            const raw = getValue(nodeIValues, k);
+            if (!raw) return [k, undefined];
+        
+            const protoVal = this.node0[k as keyof NodeDataModel];
+        
+            if (k === 'text') return [k, this.decodeTextCell(raw)];
+            if (typeof protoVal === 'number') return [k, Number(raw)];
+            if (typeof protoVal === 'boolean') return [k, raw === 'true'];
+            if (typeof protoVal === 'string') {
+              try {
+                return [k, JSON.parse(raw)]; // removes extra quotes/slashes
+              } catch {
+                return [k, raw];
+              }
+            }
+            return [k, raw];
+          })
+        );
+        const nodeI2: NodeDataModel =this.nodeStoreService.createAddAndReturnNewNode(protoNode as NodeDataModel);    
       }
     }
-    
+
     decodeTextCell(raw: string | undefined): string {
       const v = raw ? raw.trim() : '';
-      console.log('raw string to decode',raw)
       if (!v) return '';            // cellule vide → texte vide
     
       try {
@@ -149,6 +140,5 @@ export class CsvHandler{
         return '';
       }
     }
-
 
 }

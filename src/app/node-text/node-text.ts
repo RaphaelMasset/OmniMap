@@ -99,8 +99,6 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
       onUpdate: ({ editor }) => {
         migrateMathStrings(editor);
         this.node.text = JSON.stringify(editor.getJSON());
-        //this.JSONtester(editor);
-        console.log('editor.getJSON() this',this.editor.getJSON())
       }
     });
 

@@ -68,8 +68,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   
   ngOnInit() {
     //origin cree dans le service!
-    this.nodeStoreService.createAddAndReturnNewNode({ id: 1, parentNodeId: 0, title: '2222' });
-    this.nodeStoreService.createAddAndReturnNewNode({ id: 2, parentNodeId: 0, title: '3333' });
+    this.nodeStoreService.originNode.text="Right-click me";
+    this.nodeStoreService.createAddAndReturnNewNode({ id: 1, parentNodeId: 0, title: 'node id 1' });
+    this.nodeStoreService.createAddAndReturnNewNode({ id: 2, parentNodeId: 0, title: 'node id 2' });
 
     this.nodeStoreService.nodes$.subscribe(map => {
      // this.nodesMapSev = map; //sound bad to me 

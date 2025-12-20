@@ -12,7 +12,7 @@ export class NodeStoreService {
   //BehaviorSubject Can be used as both an Observable (to subscribe) and an Observer (to push new data).
   private nodesMapSubject = new BehaviorSubject<Map<number, NodeDataModel>>(this.nodesMap);
   
-  private originNode: NodeDataModel = this.createAddAndReturnNewNode({ id: 0, parentNodeId: -1, title: 'origin' });
+  public readonly originNode: NodeDataModel = this.createAddAndReturnNewNode({ id: 0, parentNodeId: -1, title: 'origin'});
 
   //store the lsit of hidden nodes
   private listOfHiddenNode: number[] = [];
@@ -196,7 +196,6 @@ export class NodeStoreService {
 
     const pos = this.getNewSiblingPosition(parentNode, siblings);
 
-    console.log(pos)
     
     const newNode: NodeDataModel = this.createAddAndReturnNewNode({
       id: newNodeId,
