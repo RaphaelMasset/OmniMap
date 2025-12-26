@@ -114,6 +114,11 @@ position: absolute;
     color: black;
     font-family: monospace;
     line-height: 1.4;
+    /* Allow selecting and copying the displayed tree (global styles set user-select: none) */
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    cursor: text;
   }
 }
 
