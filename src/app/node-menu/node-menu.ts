@@ -5,7 +5,6 @@ import {NodeTree} from '../model_service_utils/const';
 import { Subscription } from 'rxjs';
 import { NODE_MENU_WIDTH } from '../model_service_utils/const';
 
-
 @Component({
   selector: 'app-node-menu',
   standalone: true,
@@ -22,8 +21,6 @@ export class NodeMenu {
   @ViewChild('menuContainer', { read: ElementRef }) menuContainer!: ElementRef;
   @ViewChild('nodeVisibilityButton') nodeVisibilityButton!: ElementRef;
   @ViewChild('nodeChildrenTreeResumeButton') nodeChildrenTreeResumeButton!: ElementRef;
-
-  
 
   node! : NodeDataModel;
   public readonly NODE_MENU_WIDTH = NODE_MENU_WIDTH;
@@ -47,12 +44,9 @@ export class NodeMenu {
   private treeSub?: Subscription;
   private nodeSub?: Subscription;
   
-  ngOnInit() {
-    
-    this.nodeSub = this.nodeStoreService.node$(this.nodeId).subscribe((node) => {
-      
-      if (node) {
-    
+  ngOnInit() {   
+    this.nodeSub = this.nodeStoreService.node$(this.nodeId).subscribe((node) => {     
+      if (node) {  
         this.node=node;
       }
     });

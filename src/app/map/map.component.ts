@@ -71,33 +71,45 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.nodeStoreService.createAddAndReturnNewNode({ id: 1, parentNodeId: 0, title: 'node id 1' });
     this.nodeStoreService.createAddAndReturnNewNode({ id: 2, parentNodeId: 0, title: 'node id 2' });
 
-    const url = new URL(window.location.href)
-    const urlStr = url.toString() ;
-    console.log(url + ' ' + typeof(url) + ' ' + typeof(urlStr))
+    const url = new URL(window.location.href);
+    const linkCandidate = decodeURIComponent(url.toString().split('/').slice(3).join('/'));
+    console.log('Link candidate:', linkCandidate);
 
-    const urlStrSplitted = urlStr.split('/')
-    console.log(urlStrSplitted)
+    const resolved = linkCandidate.startsWith('http') ? linkCandidate : new URL(linkCandidate, window.location.origin).toString();
+    console.log('Resolved URL:', resolved);
 
-    const urlStrArg = urlStrSplitted.slice(3).join('')
-    console.log(urlStrArg)
+    fetch(resolved, { method: 'GET', mode: 'cors', redirect: 'follow' })
+      .then(async res => {
+        console.log('fetch status', res.status);
+        const ct = res.headers.get('content-type') || '';
+        if (ct.includes('text/html')) {
+          const txt = await res.text();
+          const m = txt.match(/<title>([\s\S]*?)<\/title>/i);
+          console.log('HTML title:', m ? m[1].trim() : '<no title>');
+        } else {
+          const cd = res.headers.get('content-disposition') || '';
+          const fn = (cd.match(/filename="([^\"]+)"/) || cd.match(/filename=([^;]+)/));
+          console.log('Filename from headers:', fn ? fn[1] : '<unknown>');
+        }
+      })
+      .catch(err => console.error('Fetch failed', err));
 
-    const csv = this.fetchCsvData(urlStrArg);
-
-    console.log(typeof(csv) + ' ' + csv)
-
-    //https://drive.google.com/file/d/1OvKXj_hMlsM9tlK5N1C8D1J-ihFdlh5C/view?usp=drive_link
- 
-
-    //console.log(url + ' ' + typeof(url) + ' ' + typeof(urlStr))
-
-    // Si le path ressemble à un lien (http OU drive ID) ET pas déjà en hash
-    
   }
 
-  async fetchCsvData(url: string): Promise<string> {
-    const response = await fetch(url);
-    const csvText = await response.text();
-    return csvText;//.split('\n').filter(line => line.trim());
+  async fetchCsvData(url: string): Promise<{text: string; contentType: string | null}> {
+    try {
+      const response = await fetch(url, { method: 'GET', mode: 'cors', redirect: 'follow', headers: { 'Accept': 'text/csv, text/plain, */*' } });
+      if (!response.ok) {
+        console.warn('fetchCsvData: non-ok response', response.status, response.statusText, url);
+        return { text: '', contentType: response.headers.get('content-type') };
+      }
+      const contentType = response.headers.get('content-type');
+      const text = await response.text();
+      return { text, contentType };
+    } catch (err) {
+      console.error('fetchCsvData error for', url, err);
+      return { text: '', contentType: null };
+    }
   }
 
   ngAfterViewInit() {
