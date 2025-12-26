@@ -22,6 +22,8 @@ export class NodeStoreService {
   private selectedNodeSubject =new BehaviorSubject<CONST.SelectedNodeInfo | null>(null);
   selectedNode$ = this.selectedNodeSubject.asObservable();
 
+  public scale = 1;
+
 
   // Add or update a node
   upsertNode(node: NodeDataModel): void {
@@ -87,8 +89,6 @@ export class NodeStoreService {
     );
   }
 
-
-
   // Helper to emit changes (create new Map to trigger change detection)
   private emitObservableNodesMap(): void {
     this.nodesMapSubject.next(new Map(this.nodesMap));
@@ -122,6 +122,7 @@ export class NodeStoreService {
       transparent: partial.transparent ?? false,
       titleMinimize: partial.titleMinimized ?? false,
       contentMinimized: partial.contentMinimized ?? false,
+      nodeMinimized: partial.nodeMinimized ?? false,
       locked: partial.locked ?? false,
       hiddenTree: partial.hiddenTree ?? false,
       text: partial.text ?? '',
@@ -191,11 +192,8 @@ export class NodeStoreService {
     if (!parentNode) return null!;
     
     const newNodeId = this.generateNewId();
-
     const siblings = this.getSiblingsByParent(parentNode.id);
-
     const pos = this.getNewSiblingPosition(parentNode, siblings);
-
     
     const newNode: NodeDataModel = this.createAddAndReturnNewNode({
       id: newNodeId,
@@ -216,8 +214,7 @@ export class NodeStoreService {
   getParentNode(childNode: NodeDataModel): NodeDataModel {
     const parent = this.nodesMap.get(childNode.parentNodeId);
     return parent || childNode;
-  }
-  
+  } 
 
   tryDeleteNode(nodeId: number) { 
     //prevent user from delating the last node if there is only one
@@ -408,7 +405,6 @@ export class NodeStoreService {
 
     let listOfNodesToMove: NodeDataModel[] = this.getAllChildren(nodeId);
     //listOfNodesToMove.push(nodeParentTree);
-    console.log(listOfNodesToMove);
     listOfNodesToMove.forEach( node => {
 
       node.x += dx;

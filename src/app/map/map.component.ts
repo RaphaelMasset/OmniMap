@@ -8,11 +8,8 @@ import { Line } from '../model_service_utils/Line';
 import { NodeStoreService } from '../model_service_utils/node-store';
 import { CsvHandler } from '../model_service_utils/csvHandler';
 import * as CONST from '../model_service_utils/const';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 
-interface TreeNode {
-  title: string;
-  children: TreeNode[];
-}
 
 @Component({
   selector: 'app-map',
@@ -22,11 +19,8 @@ interface TreeNode {
   styleUrls: ['./map.component.scss']
 })
 export class MapComponent implements AfterViewInit, OnDestroy {
- // nodesMap: Map<number, NodeDataModel> = new Map();
-  //nodesMapSev: Map<number, NodeDataModel> = new Map();
   listOfHiddenNode: number[] = [];
   mapContainerCoordXY = { x: 0, y: 0 };
-  defaultNodeDim = { w: 100, h: 100 };
   iterationBezier = Array.from({ length: 8 }, (_, i) => i);
   showPopupTree = false;
 
@@ -36,8 +30,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   @ViewChild('scalableContainerNode', { read: ElementRef })  scalableContainerNode!: ElementRef;
   @ViewChild('scalableContainerSVGLineAndPath', { read: ElementRef }) scalableSvgGroup!: ElementRef;
   @ViewChild(Menu, { read: ElementRef }) menuRef!: ElementRef;
+  @ViewChildren(Node) nodeComponents!: QueryList<Node>;
 
-  @ViewChildren(Node, { read: ElementRef }) nodeElements!: QueryList<ElementRef>;
+  @ViewChildren('nodeRef', { read: ElementRef }) nodeElements!: QueryList<ElementRef>;
+
   @ViewChildren('colorPicker', { read: ElementRef }) colorPickerElements!: QueryList<ElementRef>;
   // Alt +124  |
   
@@ -64,7 +60,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   menuRightSide = 0;
   menuY = 0;
 
-  constructor(private nodeStoreService: NodeStoreService) { }
+  constructor(
+    private nodeStoreService: NodeStoreService, 
+    private router: Router  // ← Router !
+  ) { }
   
   ngOnInit() {
     //origin cree dans le service!
@@ -72,9 +71,33 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.nodeStoreService.createAddAndReturnNewNode({ id: 1, parentNodeId: 0, title: 'node id 1' });
     this.nodeStoreService.createAddAndReturnNewNode({ id: 2, parentNodeId: 0, title: 'node id 2' });
 
-    this.nodeStoreService.nodes$.subscribe(map => {
-     // this.nodesMapSev = map; //sound bad to me 
-    });
+    const url = new URL(window.location.href)
+    const urlStr = url.toString() ;
+    console.log(url + ' ' + typeof(url) + ' ' + typeof(urlStr))
+
+    const urlStrSplitted = urlStr.split('/')
+    console.log(urlStrSplitted)
+
+    const urlStrArg = urlStrSplitted.slice(3).join('')
+    console.log(urlStrArg)
+
+    const csv = this.fetchCsvData(urlStrArg);
+
+    console.log(typeof(csv) + ' ' + csv)
+
+    //https://drive.google.com/file/d/1OvKXj_hMlsM9tlK5N1C8D1J-ihFdlh5C/view?usp=drive_link
+ 
+
+    //console.log(url + ' ' + typeof(url) + ' ' + typeof(urlStr))
+
+    // Si le path ressemble à un lien (http OU drive ID) ET pas déjà en hash
+    
+  }
+
+  async fetchCsvData(url: string): Promise<string> {
+    const response = await fetch(url);
+    const csvText = await response.text();
+    return csvText;//.split('\n').filter(line => line.trim());
   }
 
   ngAfterViewInit() {
@@ -88,20 +111,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     //initialise node  then correct his height after the view is loeaded //need timeout to avoid error
     setTimeout(() => {
 
-      this.nodeStoreService.updateNode(0, { y: 100 });
-      this.nodeStoreService.updateNode(1, { y: 100 });
-      this.nodeStoreService.updateNode(1, { x: 400 });
-      this.nodeStoreService.updateNode(2, { y: 500 });
-      this.nodeStoreService.updateNode(2, { x: 400 });
+      this.nodeStoreService.updateNode(0, { x: 100, y: 100 });
+      this.nodeStoreService.updateNode(1, { x: 400, y: 100 });
+      this.nodeStoreService.updateNode(2, { x: 400, y: 500 });
 
       this.menuY = this.spaceTakenHeader;
-      console.log(this.menuRightSide)
     });
-
-    
-    //console.log(this.nodeStoreService.nodes$, '.nodes')
-
-    
+  
     const containerRect = this.mapOfNodesContainerNatEl.getBoundingClientRect();
     //just in case the container move
     this.mapContainerCoordXY = { x: containerRect.left, y: containerRect.top };
@@ -111,28 +127,22 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     window.addEventListener('mouseup', this.upListener);
     this.mapOfNodesContainerNatEl.addEventListener('wheel', this.wheelListener);
 
-    //this.updateListOfHiddenNode();
     this.nodeStoreService.updateHiddenNodeList();
-    //this.listOfHiddenNode = this.nodeStoreService.hiddenNodeIds;
-    
-    
+
     //move to the node designed by the inline button in node-text
     window.addEventListener('clickableref-click', (event: any) => {
-        const nodetogo = this.nodeStoreService.getNodeSnapshot(event.detail.id)
-        //use service TODO
+      const nodetogo = this.nodeStoreService.getNodeSnapshot(Number(event.detail.id))
 
-        if(nodetogo){
-
-          this.translateX = -(nodetogo.x - window.innerWidth / 2 + nodetogo.width / 2);
-          // Align top of node just under header
-          this.translateY = -(nodetogo.y);
-          this.scale = 1;
-          this.translateScale();
-          this.translateX=0;
-          this.translateY=0;
-        }
-        // do whatever you want with the node ID
-      });
+      if(nodetogo){
+        this.translateX = -(nodetogo.x - window.innerWidth / 2 + this.getNodeDim(nodetogo).width / 2);
+        // Align top of node just under header
+        this.translateY = -(nodetogo.y - window.innerHeight / 10);
+        this.scale = 1;
+        this.nodeStoreService.scale = this.scale;
+        this.translateScale();
+      }
+      // do whatever you want with the node ID
+    });
   }
 
   translateScale(){
@@ -142,13 +152,14 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   isEventInsideOneNode(event: MouseEvent): boolean {
     const target = event.target as HTMLElement;
-    for (const nodeElem of this.nodeElements) {
-      if (nodeElem.nativeElement.contains(target)) {
-        return true; // The event target is inside a node
+    
+    // Utilise nodeComponents AVEC querySelector('.node-container')
+    for (const nodeComp of this.nodeComponents) {
+      const nodeContainer = nodeComp.getNodeContainer();
+      if (nodeContainer && nodeContainer.nativeElement.contains(target)) {
+        return true;
       }
     }
-    //if you dont click on  node, no node id selected for next menu
-    //this.selectedNodeIdForMenu = null;
     return false;
   }
 
@@ -162,7 +173,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   uploadCsvClicked(){
     // the file imput HTML elemt is style="display: none;" so we programmatically click on it when the event occur
     this.fileInput.nativeElement.click();
-    //console.log("uploadCsv()")
   }
 
   showMenu(){
@@ -202,11 +212,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     return this.nodeStoreService.getCurrentNodesArray();
     //return Array.from(this.nodesMap.values());
   }
-  getNdCenterXY(node: NodeDataModel) {   
+  getNdCenterXY(node: NodeDataModel) { 
     return {
-      x: (node.x - this.mapContainerCoordXY.x) + (node.width)/2,
-      y: (node.y - this.mapContainerCoordXY.y) + (node.height)/2,
-    };
+      x: (node.x - this.mapContainerCoordXY.x) + (this.getNodeDim(node).width)/2,
+      y: (node.y - this.mapContainerCoordXY.y) + (this.getNodeDim(node).height)/2,
+    };   
   }
 
   private onDown = (event: MouseEvent) => {
@@ -255,8 +265,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const delta = event.deltaY;
     if (delta > 0) {
       this.scale = Math.max(0.1, this.scale - zoomSpeed * delta);
+      this.nodeStoreService.scale = this.scale;
     } else {
       this.scale = Math.min(5, this.scale - zoomSpeed * delta);
+      this.nodeStoreService.scale = this.scale;
     }
     this.translateX = offsetX - preZoomX * this.scale;
     this.translateY = offsetY - preZoomY * this.scale;
@@ -274,17 +286,17 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   nodeLineInter(node: NodeDataModel){
 
-    const parentNd = this.nodeStoreService.getParentNode(node);
-    const ctrPaNd = this.getNdCenterXY(parentNd)
+    const nodeParent = this.nodeStoreService.getParentNode(node);
+    const ctrPaNd = this.getNdCenterXY(nodeParent)
     const ctrNd = this.getNdCenterXY(node)
 
     return {
       c1: this.rectangleLineIntersection(ctrNd.x, ctrNd.y,
-                                          node.width, node.height, 
+                                          this.getNodeDim(node).width, node.height, 
                                           ctrNd.x, ctrNd.y,
                                           ctrPaNd.x,ctrPaNd.y),
       c2: this.rectangleLineIntersection(ctrPaNd.x, ctrPaNd.y,
-                                          parentNd.width, parentNd.height, 
+                                          this.getNodeDim(nodeParent).width, nodeParent.height, 
                                           ctrPaNd.x,ctrPaNd.y,
                                           ctrNd.x, ctrNd.y)
     }
@@ -344,24 +356,35 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       y: y1 + tExit * dy
     };
   }
+
+  getNodeDim(node: NodeDataModel):{width:number,height:number}{
+    if (node.nodeMinimized) {
+      const dimDOM = this.getNodeDimensionsFromDOM(node.id);
+      return {width:dimDOM.width,height:dimDOM.height}
+    } else {
+      return {width:node.width,height:node.height}
+    }
+  }
+  
   generateBezierPaths(node: NodeDataModel): string[] {
-    const parentNode = this.nodeStoreService.getParentNode(node);
-    if (!parentNode) return [];
+    const nodeParent = this.nodeStoreService.getParentNode(node);
+    if (!nodeParent) return [];
     //lets substract 4 pixels so the node cover the line edges
     const adjust = 3;
+
     ///// GET starting coordinates parent
     const parentCorners = this.getRectangleVertices(
-      this.getNdCenterXY(parentNode).x,
-      this.getNdCenterXY(parentNode).y,
-      parentNode.width-adjust,
-      parentNode.height-adjust
+      this.getNdCenterXY(nodeParent).x,
+      this.getNdCenterXY(nodeParent).y,
+      this.getNodeDim(nodeParent).width-adjust,
+      this.getNodeDim(nodeParent).height-adjust
     );
     ///// GET starting coordinates child
     const childCorners = this.getRectangleVertices(
       this.getNdCenterXY(node).x,
       this.getNdCenterXY(node).y,
-      node.width-adjust,
-      node.height-adjust
+      this.getNodeDim(node).width-adjust,
+      this.getNodeDim(node).height-adjust
     );
     ///// GET VISIBLE SEGMENT INFO
     const lineCoord = this.nodeLineInter(node);
@@ -381,7 +404,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     let pEndParent = line.getPointAtDistance(lineLen-endDist);
     
     ////GET PATHS CONTROL POINTS
-
     let ctrPtiRectCh = line.getPointAtDistance(centreLittleRect);
     let ctrGrdRectCh = line.getPointAtDistance(centreBigRect);
     let ctrPtiRectPa = line.getPointAtDistance(lineLen-centreLittleRect);
@@ -418,17 +440,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       const end = childCorners[i+2];
       paths.push(`M ${start.x},${start.y} C ${ctrl1.x},${ctrl1.y} ${ctrl2.x},${ctrl2.y} ${midPt.x},${midPt.y} C ${ctrl4.x},${ctrl4.y} ${ctrl3.x},${ctrl3.y} ${end.x},${end.y} Z`);
     }
-       // 4 courbes partant de l'enfant → vers 70 %
-    /*for (let i = 0; i < 2; i++) {
-      const start = childCorners[i];
-      const ctrl1 = controlChildren2[i];
-      const ctrl2 = controlChildren2[i + 4];
-      const midPt = pEndChild2;
-      const ctrl3 = controlChildren2[i+2];
-      const ctrl4 = controlChildren2[i + 6];
-      const end = childCorners[i+2];
-      paths.push(`M ${start.x},${start.y} C ${ctrl1.x},${ctrl1.y} ${ctrl2.x},${ctrl2.y} ${midPt.x},${midPt.y} C ${ctrl4.x},${ctrl4.y} ${ctrl3.x},${ctrl3.y} ${end.x},${end.y} Z`);
-    }*/
 
     return paths;
   }
@@ -519,7 +530,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   getHalfDiagOfNode(node: NodeDataModel){
-    return Math.sqrt(node.width**2 + node.height**2)/2;
+    return Math.sqrt(this.getNodeDim(node).width**2 + this.getNodeDim(node).height**2)/2;
   }
 
   isLineLongEnoughToDisplayNodesTitles(childNode: NodeDataModel){
@@ -642,4 +653,24 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     return Math.abs(angle)>90
   }
+
+  getNodeElementById(nodeId: number): Node | null {
+    return this.nodeComponents.find(nodeComp => 
+      nodeComp.node.id === nodeId  // Utilise node.id du composant
+    ) || null;
+  }
+
+  getNodeDimensionsFromDOM(nodeId: number): { width: number; height: number } {
+    const nodeComp = this.getNodeElementById(nodeId);
+    if (!nodeComp) return { width: 0, height: 0 };
+  
+    const container = nodeComp.getNodeContainer();
+    if (!container) return { width: 0, height: 0 };
+      
+    return { 
+      width: container.nativeElement.offsetWidth, 
+      height: container.nativeElement.offsetHeight 
+    };
+  }
+
 }

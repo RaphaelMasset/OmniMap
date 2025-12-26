@@ -9,8 +9,9 @@ class="node-container"
 [style.position]="'absolute'"
 [style.left.px]="node.x"
 [style.top.px]="node.y"
-[style.width.px]="node.width"
-[style.height.px]="node.height">  
+
+[style.width.px]="node.nodeMinimized ? null : node.width"
+[style.height.px]="node.nodeMinimized ? null : node.height">  
 
   <input 
   #titleArea
@@ -20,6 +21,7 @@ class="node-container"
   pattern="[\x00-\x7F]*"
   [readonly]="node.locked"
   [hidden]="node.titleMinimized" 
+  [style.width]="node.nodeMinimized ? (node.title.length + 1) + 'ch' : '100%'"
   [value]="node.title"
   maxlength="100"
   [style.border-top]="node.transparent ? '1px solid rgb(0, 0, 0, 0.1)' : 'null'"
@@ -29,8 +31,7 @@ class="node-container"
 
   <app-node-text 
   [style.border-top]="node.transparent ? '1px solid rgb(0, 0, 0, 0.1)' : 'null'"
-
-  [hidden]="node.contentMinimized" 
+  [hidden]="node.contentMinimized || node.nodeMinimized" 
   #textArea 
   [node]="node"
   [scale]="scale"/>

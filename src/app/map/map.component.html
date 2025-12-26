@@ -32,7 +32,7 @@
                 [attr.stroke]="node.color" 
                 stroke-width="2" />
 
-                @if(!node.transparent && !getParentNode(node).transparent)
+                @if(!node.transparent && !getParentNode(node).transparent )
                 { 
                     @for (i of iterationBezier; track i) {
                         <path
@@ -85,7 +85,6 @@
 <app-menu 
 #menuRef
 [hidden]="!menuVisible" 
-[style.position]="'absolute'"
 [style.right.px]="menuRightSide"
 [style.top.px]="menuY"
 [menuDim]="getMenuDim()" />

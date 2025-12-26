@@ -1,8 +1,9 @@
 @if(node)
 {
     <div 
-    #menu
-    class="context-menu">
+    #menuContainer
+    class="context-menu"
+    [style.width.px]="NODE_MENU_WIDTH">
         <ul>
             <li class="unclickable">Node id: {{node.id}}</li>
             <li (click)="onMenuAction('newNode',$event)">New child node</li>
@@ -16,11 +17,12 @@
                 [value]="node.color || '#007bff'">
             </li>
 
-            <li (click)="onMenuAction('transparent',$event)">{{ node.transparent ? 'Show Background' : 'Hide Background' }}</li>
-            <li (click)="onMenuAction('MinMaximiseTitle',$event)">{{ node.titleMinimized ? 'Show Title' : 'Hide Title' }}</li>   
-            <li (click)="onMenuAction('MinMaximiseContent',$event)">{{ node.contentMinimized ? 'Show Content' : 'Hide Content' }}</li>
-            <li (click)="onMenuAction('MinMaximiseChildrenTree',$event)">{{ node.hiddenTree ? 'Show Children' : 'Hide Children'}}</li>
-            <li (click)="onMenuAction('DisplayChildrenTreeResume',$event)"class="li-flex">Display tree up to:
+            <li #nodeVisibilityButton 
+            (mouseenter)="onNodeVisibilityButtonHover()"
+            (mouseleave)="onNodeVisibilityButtonLeave()">See node visibility options -></li>
+
+            <li #nodeChildrenTreeResumeButton
+                (click)="onMenuAction('DisplayChildrenTreeResume',$event)"class="li-flex">Display tree up to:
                 <input 
                 type="number" 
                 class="nb-input"
@@ -46,15 +48,37 @@
             }
             <li (click)="onMenuAction('closeMenu',$event)">Close Menu</li>
         </ul>
+
+        @if(subMenuVisible){
+            <div 
+            class="context-menu-visibility"
+            [style.width.px]="NODE_MENU_WIDTH"
+            [style.left.px]="menuLeft"
+            [style.top.px]="menuTop"
+            (mouseenter)="onSubMenuForNodeVisibilityHover()"
+            (mouseleave)="onSubMenuForNodeVisibilityLeave()">
+                <ul>
+                    <li (click)="onMenuAction('transparent',$event)">{{ node.transparent ? 'Show Background' : 'Hide Background' }}</li>
+                    <li (click)="onMenuAction('MinMaximiseChildrenTree',$event)">{{ node.hiddenTree ? 'Show Child(ren)' : 'Hide Child(ren)'}}</li>
+                    <li (click)="onMenuAction('MinMaximiseTitle',$event)">{{ node.titleMinimized ? 'Show Title' : 'Hide Title' }}</li>   
+                    <li (click)="onMenuAction('MinMaximiseContent',$event)">{{ node.contentMinimized ? 'Show Content' : 'Hide Content' }}</li>
+                    <li #nodeVisibilityButton 
+                    (click)="onMenuAction('MinMaximiseNode',$event)">
+                    {{ node.nodeMinimized ? 'Expend Node' : 'Minimize Node'}}</li>
+                    
+                </ul>
+            </div>
+        }
+        @if(showPopupTree){
+            <div class="popup-tree" 
+            [style.left.px]="popupX" 
+            [style.top.px]="popupY"
+            [style.border]="'2px solid ' + node.color">
+                <button class="close" (click)="showPopupTree = false" [style.background]="node.color">×</button>
+                <div class="tree-txt">{{getTreeHtlm()}}</div>
+            </div>
+        }
     </div>
 
-    @if(showPopupTree){
-        <div class="popup-tree" 
-        [style.left.px]="popupX" 
-        [style.top.px]="popupY"
-        [style.border]="'2px solid ' + node.color">
-            <button class="close" (click)="showPopupTree = false" [style.background]="node.color">×</button>
-            <div class="tree-txt">{{getTreeHtlm()}}</div>
-        </div>
-    }
+
 }

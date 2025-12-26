@@ -1,8 +1,10 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { NodeDataModel } from '../model_service_utils/node-data.model';
 import { NodeStoreService } from '../model_service_utils/node-store';
 import {NodeTree} from '../model_service_utils/const';
 import { Subscription } from 'rxjs';
+import { NODE_MENU_WIDTH } from '../model_service_utils/const';
+
 
 @Component({
   selector: 'app-node-menu',
@@ -17,10 +19,18 @@ export class NodeMenu {
   @Output() evDeleteNodeClicked = new EventEmitter<void>();
   @Output() evCloseMenuClicked = new EventEmitter<void>();
 
+  @ViewChild('menuContainer', { read: ElementRef }) menuContainer!: ElementRef;
+  @ViewChild('nodeVisibilityButton') nodeVisibilityButton!: ElementRef;
+  @ViewChild('nodeChildrenTreeResumeButton') nodeChildrenTreeResumeButton!: ElementRef;
+
+  
+
   node! : NodeDataModel;
+  public readonly NODE_MENU_WIDTH = NODE_MENU_WIDTH;
 
   titleMinimised = false;
   textMinimised = false;
+  subMenuVisible = false;
   treeDisplayDepth = 6;
   newParentID :number = -1;
 
@@ -28,6 +38,9 @@ export class NodeMenu {
   popupX = 0;
   popupY = 0;
   nodeTree: NodeTree | null = null;
+
+  menuLeft = 0;
+  menuTop = 0;
 
   constructor(private nodeStoreService: NodeStoreService) {}
 
@@ -80,7 +93,11 @@ export class NodeMenu {
       case 'MinMaximiseContent':
         //this.node.contentMinimized = !this.node.contentMinimized;
         this.nodeStoreService.updateNode(this.nodeId, { contentMinimized: !this.node.contentMinimized });
-        break;
+        break;       
+      
+      case 'MinMaximiseNode':
+        this.nodeStoreService.updateNode(this.nodeId, { nodeMinimized: !this.node.nodeMinimized });
+        break;  
 
       case 'deleteNode':
         this.nodeStoreService.tryDeleteNode(this.node.id);
@@ -112,9 +129,9 @@ export class NodeMenu {
       case 'DisplayChildrenTreeResume':
         const mouseEvent = event as MouseEvent; 
         this.setNodeTree();
-        this.popupX = mouseEvent.clientX + 10;
-        this.popupY = mouseEvent.clientY;
-        this.showPopupTree = true;
+        this.setNodeTreeCoordinates()
+
+        this.showPopupTree = !this.showPopupTree;
         break;
 
       case 'newParent':
@@ -150,6 +167,19 @@ export class NodeMenu {
     this.nodeTree = this.nodeStoreService.buildTree(this.node.id, this.treeDisplayDepth);
   }
 
+  setNodeTreeCoordinates(){
+
+    const coord = this.getCoordOfref('nodeChildrenTreeResumeButton');
+    const menuContainerNativeEl = this.menuContainer.nativeElement;
+    const rect = menuContainerNativeEl.getBoundingClientRect();
+    
+    this.popupX = (NODE_MENU_WIDTH);
+    this.popupY = (coord.y-rect.y)/this.getScale();
+
+
+    
+  }
+
   getTreeHtlm(): string {   
     if(this.nodeTree==null) return '';
     
@@ -174,6 +204,33 @@ export class NodeMenu {
     
     return html + buildRecursively(this.nodeTree.children);
   }
-  
+
+  // Une SEULE méthode pour TOUS les éléments
+  getCoordOfref(refName: string): { x: number; y: number } {
+    const elem = (this as any)[refName]?.nativeElement as HTMLElement;
+    if (!elem) return { x: 0, y: 0 };
+    const rect = elem.getBoundingClientRect();
+
+    return { x: rect.left, y: rect.top };
+  }
+
+  getScale(){
+    return this.nodeStoreService.scale;
+   }
+
+  onNodeVisibilityButtonHover() {
+    // Calcule UNE SEULE FOIS au hover
+    const coord = this.getCoordOfref('nodeVisibilityButton');
+    const menuContainerNativeEl = this.menuContainer.nativeElement;
+    const rect = menuContainerNativeEl.getBoundingClientRect();
+
+    this.menuLeft = (NODE_MENU_WIDTH);
+    this.menuTop = (coord.y-rect.y)/this.getScale();
+
+    this.subMenuVisible = true;
+  }  
+  onNodeVisibilityButtonLeave() {this.subMenuVisible=false;}
+  onSubMenuForNodeVisibilityHover() {this.onNodeVisibilityButtonHover();}
+  onSubMenuForNodeVisibilityLeave() {this.onNodeVisibilityButtonLeave();}
   
 }

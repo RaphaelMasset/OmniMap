@@ -35,12 +35,12 @@ export const ClickableRef = TiptapNode.create({
     ];
   },
   //auto-conversion rules, what Tiptap should interpret as this node.
-  //[[id:42]]
+  //#node42
   addInputRules() {
     const regex = /((#node)(\d+)) $/;
     return [
       nodeInputRule({
-        find: regex,       // matches [[id:42]]
+        find: regex,       // matches #node42
         type: this.type,
         getAttributes: match => ({
           id: match[3],

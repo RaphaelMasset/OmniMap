@@ -75,5 +75,4 @@ export class Menu  {
       .map(r => `${r.id}-${r.title}`)
       .join('\n ↓\n');   // arrow only between items
   }
-
 }

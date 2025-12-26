@@ -1,6 +1,7 @@
 import { Component, ElementRef, Input, ViewChild, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { NodeDataModel } from '../model_service_utils/node-data.model';
-import { Editor } from '@tiptap/core';
+import { Link } from '@tiptap/extension-link';
+import { Editor,markInputRule,nodeInputRule  } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
@@ -36,7 +37,6 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
     setTimeout(() => {
       this.initEditor();
     });
-
   }
   //changement externe ex chargement CSV
   ngOnChanges(changes: SimpleChanges) {
@@ -52,6 +52,46 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
     }
   }
 
+
+  MarkdownImage = Image.extend({
+    addInputRules() {
+      return [
+        nodeInputRule({
+          // ✅ URL s'arrête AVANT "="
+          find: /!\[([^\]]*)\]\s*\(\s*(https?:\/\/[^=\s]+)(?:\s*[=x*]\s*(\d+)(?:[x*]\s*(\d+))?)?\s*\)(?:\s|$)/,
+          type: this.type,
+          getAttributes: (match) => {
+            const width = match[3] ? parseInt(match[3]) : null;
+            const height = match[4] ? parseInt(match[4]) : null;
+            return {
+              src: match[2],     // ✅ URL propre: "image.jpg"
+              alt: match[1] || null,
+              width, height
+            };
+          }
+        })
+      ];
+    },
+    
+    addAttributes() {
+      return {
+        src: { default: null },
+        alt: { default: null },
+        width: { 
+          default: null, 
+          parseHTML: el => el.style.width?.replace('px', ''),
+          renderHTML: attrs => attrs['width'] ? { style: `width: ${attrs['width']}px` } : {}
+        },
+        height: { 
+          default: null,
+          parseHTML: el => el.style.height?.replace('px', ''),
+          renderHTML: attrs => attrs['height'] ? { style: `height: ${attrs['height']}px` } : {}
+        }
+      };
+    }
+    });
+  
+
   private initEditor() { 
     this.editor = new Editor({
       element: this.editorElement.nativeElement,
@@ -62,7 +102,10 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
             levels: [1, 2, 3]
           }
         }),
-        Image,
+        Image.configure({
+          inline: true,           // ✅ Dans le flux texte
+          allowBase64: false,
+        }),
         Markdown,
         Placeholder.configure({
           placeholder: 'Start writing...'
@@ -101,17 +144,19 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
         this.node.text = JSON.stringify(editor.getJSON());
       }
     });
-
-    this.editor.registerPlugin(
+    /** 
+     * auto-conversion of Markdown image syntax to actual <img> nodes when typing the closing ) or space after a link.
+     */
+    /*this.editor.registerPlugin(
       new Plugin({
         props: {
           handleTextInput(view, from, to, text) {
-            if (text === ')') {
+            if (text === ')' || text === ' ') {
+              console.log('typed ) or space')
               const fullText = view.state.doc.textBetween(0, view.state.doc.content.size, '\n');
               const match = fullText.match(/!\[([^\]]*)\]\((https?:\/\/[^\)]+)\)/);
-              const match2 = fullText.match(/\[\[it:(\d+)\]\]/);
-              if (match2) {console.log('refff')}
               if (match) {
+                console.log('link match')
                 const [, alt, src] = match;
                 // Supprime le texte Markdown
                 view.dispatch(view.state.tr.delete(from - match[0].length, from));
@@ -126,7 +171,7 @@ export class NodeText implements OnInit, OnDestroy, OnChanges {
           },
         },
       })
-    );
+    );*/
   }
 
   ngOnDestroy() {

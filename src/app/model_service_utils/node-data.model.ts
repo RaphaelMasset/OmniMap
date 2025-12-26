@@ -11,6 +11,7 @@ export interface NodeDataModel {
   transparent: boolean;
   titleMinimized?: boolean;
   contentMinimized?: boolean;
+  nodeMinimized?: boolean;
   locked: boolean;
   hiddenTree: boolean;
   text?: string ;

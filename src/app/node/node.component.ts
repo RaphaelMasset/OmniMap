@@ -69,8 +69,11 @@ export class Node {
 
     if (clickedInsideNode && !clickedInsideMenu) {
       event.preventDefault();  // Empêche menu natif
+      this.nodeStoreService.scale= this.scale;
+      
       this.menuX = (event.clientX - rect.left)/this.scale;
       this.menuY = (event.clientY - rect.top)/this.scale;
+      console.log(this.menuX.toFixed(0) +' '+this.menuY.toFixed(0))
       this.menuVisible = true;
     } else if (clickedInsideMenu) {
       event.preventDefault();
@@ -96,14 +99,12 @@ export class Node {
       this.textArea.nativeElement.contains(clickedElement) ||
       this.menuElement.nativeElement.contains(clickedElement) 
       ){return}
-
       
     if (this.clickIsOnResizingHandle(event)){
       this.moving = false;
       this.resizing = true;
       this.movingWholeTree = false;
     }else if (this.clickIsOnMoveTreeHandle(event)){
-      console.log('clickIsOnMoveTreeHandle'+this.clickIsOnMoveTreeHandle(event))
       this.moving = true;
       this.resizing = false;
       this.movingWholeTree = true;
@@ -125,9 +126,7 @@ export class Node {
     if (this.moving){   
       this.node.x += dx;
       this.node.y += dy;
-      //console.log('Dragging - dx: '+dx+' dy: '+dy)
     } else if (this.resizing){
-      console.log('Resizing - dx: '+dx+' dy: '+dy)
       const rect = this.nodeContainer.nativeElement.getBoundingClientRect();
       //16 pixel min node size so the handle is clearly vissible and we can click, do a global var
       if ((this.node.width + dx) > CONST.DEFAULT_MIN_NODE_SIZE){this.node.width += dx;} 
@@ -167,7 +166,8 @@ export class Node {
     return xOk && yOk
   }
 
-
-
+  getNodeContainer(): ElementRef | null {
+    return this.nodeContainer;
+  }
   
 }

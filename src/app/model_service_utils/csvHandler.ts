@@ -103,14 +103,11 @@ export class CsvHandler{
     
       for (let i = 1; i < lines.length; i++) {
         const nodeIValues = lines[i].split(',');
-
         const protoNode: Partial<NodeDataModel> = Object.fromEntries(
           header.map(k => {
             const raw = getValue(nodeIValues, k);
-            if (!raw) return [k, undefined];
-        
-            const protoVal = this.node0[k as keyof NodeDataModel];
-        
+            if (!raw) return [k, undefined];        
+            const protoVal = this.node0[k as keyof NodeDataModel];       
             if (k === 'text') return [k, this.decodeTextCell(raw)];
             if (typeof protoVal === 'number') return [k, Number(raw)];
             if (typeof protoVal === 'boolean') return [k, raw === 'true'];
@@ -128,15 +125,15 @@ export class CsvHandler{
       }
     }
 
-    decodeTextCell(raw: string | undefined): string {
-      const v = raw ? raw.trim() : '';
-      if (!v) return ''; // cellule vide → texte vide
-    
-      try {
-        return decodeURIComponent(escape(atob(v)));
-      } catch {
-        console.warn('Invalid base64 text cell:', v);
-        return '';
-      }
+  decodeTextCell(raw: string | undefined): string {
+    const v = raw ? raw.trim() : '';
+    if (!v) return ''; // cellule vide → texte vide
+    try {
+      return decodeURIComponent(escape(atob(v)));
+    } catch {
+      console.warn('Invalid base64 text cell:', v);
+      return '';
     }
+  }
+  
 }

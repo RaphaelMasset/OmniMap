@@ -1,7 +1,7 @@
 <ul>
-
     <li>Math: https://katex.org/docs/supported.html</li>
-    <li>TODO</li>
+    <li>Clickalbe Ref: "#node0" + space</li>
+    <li>image: ![img](https://example.com/img.jpg =siseXxsiseY) </li>
     <li (click)="onMenuAction('nodeSearch',$event)"class="li-flex">Search Node title:
         <input 
         type="text" 
@@ -24,7 +24,6 @@
 
 @if(showPopUp){
     <div class="popup-tree" 
-    [style.position]="'absolute'"
     [style.right.px]="popupRight" 
     [style.top.px]="popupTop">
         <button class="close" (click)="showPopUp = false" >×</button>

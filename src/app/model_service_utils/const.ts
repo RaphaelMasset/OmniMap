@@ -1,5 +1,6 @@
 export const DEFAULT_MIN_NODE_SIZE = 16;
 export const NODE_LINE_TEXT_MARGIN = 60;
+export const NODE_MENU_WIDTH = 200;
 
 export interface NodeTree {
   id: number;
@@ -7,8 +8,6 @@ export interface NodeTree {
   children: NodeTree[];
   isTruncated?: boolean;  // if depth is > 6
 }
-
-
 
 export interface SelectedNodeInfo {
   id: number;
