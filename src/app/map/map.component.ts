@@ -64,6 +64,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     private nodeStoreService: NodeStoreService, 
     private router: Router  // ← Router !
   ) { }
+  // http://localhost:4200/https://drive.google.com/file/d/1OvKXj_hMlsM9tlK5N1C8D1J-ihFdlh5C/view?usp=sharing
+  //                       https://drive.usercontent.google.com/u/0/uc?id=1OvKXj_hMlsM9tlK5N1C8D1J-ihFdlh5C&export=download
   
   ngOnInit() {
     //origin cree dans le service!
@@ -71,13 +73,26 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.nodeStoreService.createAddAndReturnNewNode({ id: 1, parentNodeId: 0, title: 'node id 1' });
     this.nodeStoreService.createAddAndReturnNewNode({ id: 2, parentNodeId: 0, title: 'node id 2' });
 
+
+    /////get and parse url
     const url = new URL(window.location.href);
+    //url.tostring -> split i a list with / as separator for each list elements
+    //supress elements before the third -> join the rest with / in one string
     const linkCandidate = decodeURIComponent(url.toString().split('/').slice(3).join('/'));
     console.log('Link candidate:', linkCandidate);
-
+    //if there is an http keep it as it is if not combine it with page origin
     const resolved = linkCandidate.startsWith('http') ? linkCandidate : new URL(linkCandidate, window.location.origin).toString();
     console.log('Resolved URL:', resolved);
 
+    const fileId = resolved.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1]; // "1OvKXj_hMlsM9tlK5N1C8D1J-ihFdlh5C"
+
+    if (fileId)
+    {
+      console.log('drive id', fileId);
+      this.loadCsvFromGoogleDrive(fileId)
+
+    }
+/*
     fetch(resolved, { method: 'GET', mode: 'cors', redirect: 'follow' })
       .then(async res => {
         console.log('fetch status', res.status);
@@ -92,25 +107,38 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           console.log('Filename from headers:', fn ? fn[1] : '<unknown>');
         }
       })
-      .catch(err => console.error('Fetch failed', err));
-
+      .catch(err => console.error('Fetch failed', err));*/
   }
-
-  async fetchCsvData(url: string): Promise<{text: string; contentType: string | null}> {
-    try {
-      const response = await fetch(url, { method: 'GET', mode: 'cors', redirect: 'follow', headers: { 'Accept': 'text/csv, text/plain, */*' } });
-      if (!response.ok) {
-        console.warn('fetchCsvData: non-ok response', response.status, response.statusText, url);
-        return { text: '', contentType: response.headers.get('content-type') };
-      }
-      const contentType = response.headers.get('content-type');
-      const text = await response.text();
-      return { text, contentType };
-    } catch (err) {
-      console.error('fetchCsvData error for', url, err);
-      return { text: '', contentType: null };
-    }
+  
+async loadCsvFromGoogleDrive(fileId: string) {
+  try {
+    // ✅ CLASSIC Google Drive URL (works with "Anyone with link")
+    const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+    
+    const response = await fetch(downloadUrl, { 
+      method: 'GET', 
+      mode: 'no-cors'  // ← BYPASS CORS BLOCK!
+    });
+    
+    console.log('✅ Drive fetch status:', response.status || 'opaque');
+    
+    // no-cors = opaque response → no headers/content-type access
+    const csvBlob = await response.blob();
+    
+    // Use default filename since no headers
+    const csvFile = new File([csvBlob], `drive-${fileId}.csv`, { type: 'text/csv' });
+    
+    const fakeInput = { files: [csvFile] } as unknown as HTMLInputElement;
+    const fakeEvent = { target: fakeInput } as unknown as Event;
+    
+    console.log('✅ CSV loaded:', csvFile.name, csvFile.size, 'bytes');
+    this.onFileSelected(fakeEvent);
+    
+  } catch (error) {
+    console.error('❌ Google Drive CSV failed:', error);
   }
+}
+
 
   ngAfterViewInit() {
     this.mapOfNodesContainerNatEl = this.mapOfNodesContainer.nativeElement;
@@ -155,6 +183,38 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       }
       // do whatever you want with the node ID
     });
+
+    window.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault(); // stops browser's Save Page
+        this.writeCsvClicked();
+        console.log('Ctrl+S detected');
+      }
+    });
+
+
+    window.addEventListener('dragover', (event: DragEvent) => {
+      event.preventDefault(); // allow drop
+    });
+    
+    window.addEventListener('drop', (event: DragEvent) => {
+      event.preventDefault();
+    
+      const files = event.dataTransfer?.files;
+      if (!files || files.length === 0) return;
+    
+      const file = files[0];
+      if (!file.name.endsWith('.csv')) {
+        console.log('Not a CSV');
+        return;
+      }
+    
+      // reuse your existing handler
+      const fakeInput = { files: [file] } as unknown as HTMLInputElement;
+      const fakeEvent = { target: fakeInput } as unknown as Event;
+      this.onFileSelected(fakeEvent);
+    });
+    
   }
 
   translateScale(){
@@ -179,8 +239,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const csvHandler = new CsvHandler(this.nodeStoreService);
     csvHandler.writeCsv();
   }
-
- 
 
   uploadCsvClicked(){
     // the file imput HTML elemt is style="display: none;" so we programmatically click on it when the event occur
