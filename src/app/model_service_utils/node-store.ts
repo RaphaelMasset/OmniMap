@@ -122,7 +122,7 @@ export class NodeStoreService {
       transparent: partial.transparent ?? false,
       titleMinimize: partial.titleMinimized ?? false,
       contentMinimized: partial.contentMinimized ?? false,
-      nodeMinimized: partial.nodeMinimized ?? false,
+      //nodeMinimized: partial.nodeMinimized ?? false,
       locked: partial.locked ?? false,
       hiddenTree: partial.hiddenTree ?? false,
       text: partial.text ?? '',

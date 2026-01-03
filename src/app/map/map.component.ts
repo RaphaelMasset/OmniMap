@@ -428,12 +428,12 @@ async loadCsvFromGoogleDrive(fileId: string) {
   }
 
   getNodeDim(node: NodeDataModel):{width:number,height:number}{
-    if (node.nodeMinimized) {
+    /*if (node.nodeMinimized) {
       const dimDOM = this.getNodeDimensionsFromDOM(node.id);
       return {width:dimDOM.width,height:dimDOM.height}
-    } else {
+    } else {*/
       return {width:node.width,height:node.height}
-    }
+    //}
   }
   
   generateBezierPaths(node: NodeDataModel): string[] {
