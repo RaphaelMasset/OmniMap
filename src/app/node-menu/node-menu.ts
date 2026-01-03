@@ -89,9 +89,16 @@ export class NodeMenu {
         this.nodeStoreService.updateNode(this.nodeId, { contentMinimized: !this.node.contentMinimized });
         break;       
       
-      case 'MinMaximiseNode':
-        this.nodeStoreService.updateNode(this.nodeId, { nodeMinimized: !this.node.nodeMinimized });
-        break;  
+     /* case 'MinMaximiseNode':
+        console.log('MinMaximiseNode clicked',
+          this.nodeStoreService.getNodeMinSize(this.nodeId).minWidth,
+          this.nodeStoreService.getNodeMinSize(this.nodeId).minHeight);
+
+        this.nodeStoreService.updateNode(this.nodeId, { /*nodeMinimized: !this.node.nodeMinimized,*//*
+          width: this.nodeStoreService.getNodeMinSize(this.nodeId).minWidth,
+          height: this.nodeStoreService.getNodeMinSize(this.nodeId).minHeight 
+        });
+        break; */ 
 
       case 'deleteNode':
         this.nodeStoreService.tryDeleteNode(this.node.id);

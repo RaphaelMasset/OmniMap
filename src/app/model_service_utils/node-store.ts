@@ -3,11 +3,11 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { NodeDataModel } from './node-data.model';
 import * as CONST from '../model_service_utils/const';
-import { Line } from '../model_service_utils/Line';
 
 @Injectable({ providedIn: 'root' })
 export class NodeStoreService {
   private nodesMap = new Map<number, NodeDataModel>();
+ // private nodeMinSizeMap = new Map<number, { minWidth: number; minHeight: number }>();
   //BehaviorSubject Holds current value - Emits new values to all current subscribers when .next() is called. 
   //BehaviorSubject Can be used as both an Observable (to subscribe) and an Observer (to push new data).
   private nodesMapSubject = new BehaviorSubject<Map<number, NodeDataModel>>(this.nodesMap);
@@ -423,6 +423,17 @@ export class NodeStoreService {
     }
     return treelist;
   }
+/*
+  updateNodeMinSize(nodeid:number,height:number,width:number): void {
+    this.nodeMinSizeMap.set(nodeid, {
+      minWidth: height,
+      minHeight: width
+    });
+  }
+
+  getNodeMinSize(nodeId: number): { minWidth: number; minHeight: number } {
+    return this.nodeMinSizeMap.get(nodeId)??{ minWidth: 100, minHeight: 100 };
+  }*/
   
   
 }

@@ -9,7 +9,7 @@ import { NodeStoreService } from '../model_service_utils/node-store';
 import { CsvHandler } from '../model_service_utils/csvHandler';
 import * as CONST from '../model_service_utils/const';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-
+import { Utils } from '../model_service_utils/funcUtils';
 
 @Component({
   selector: 'app-map',
@@ -460,6 +460,7 @@ async loadCsvFromGoogleDrive(fileId: string) {
     const lineCoord = this.nodeLineInter(node);
     const line = new Line(lineCoord.c1.x, lineCoord.c1.y, lineCoord.c2.x, lineCoord.c2.y);
     const lineLen = line.getLength();
+    console.log('lineLen',lineLen);
 
     //// RATIOS & Distances for animation control points
     const ratio = 0.5;
@@ -658,38 +659,36 @@ async loadCsvFromGoogleDrive(fileId: string) {
     return this.nodeStoreService.hiddenNodeIds;;
   }
 
-  truncateSvgText(
-    textEl: HTMLElement, // the <text> element to measure
-    node: NodeDataModel,
-    isChild: boolean      // original string
-  ) :string {
 
+  truncateSvgText(
+    textEl: HTMLElement,
+    node: NodeDataModel,
+    isChild: boolean
+  ): string {
     const line = this.getLineFromGivenNodeToParent(node);
     const lineLen = line.getLength();
-    const parentNode = this.getParentNode(node);
+    const parentNode = this.getParentNode(node)!;
+  
     let text = isChild ? node.title : parentNode.title;
 
-    //const el = document.querySelector('text'); // your SVG text element
-    const style = getComputedStyle(textEl as Element);
-    const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const maxPx =
+      (lineLen
+        - CONST.NODE_LINE_TEXT_MARGIN * 2
+        - this.getHalfDiagOfNode(node)
+        - this.getHalfDiagOfNode(parentNode)) / 2;
 
-    const maxPx = (lineLen - CONST.NODE_LINE_TEXT_MARGIN*2 - this.getHalfDiagOfNode(node) - this.getHalfDiagOfNode(parentNode))/2;
-
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d')!;
-    ctx.font = font;
-
-    if (ctx.measureText(text).width <= maxPx) return text;
-
-    while (text.length > 1) {
-      text = text.slice(0, -1);          // remove last char
-      const textEllipsis = text + '…';// add ellipsis
-      if (ctx.measureText(textEllipsis).width <= maxPx) {
-        text = textEllipsis;
-        break;   
-      };
+    if (Utils.measureTextWidthPx(text, textEl) <= maxPx) {
+      return text;
     }
-
+  
+    while (text.length > 1) {
+      text = text.slice(0, -1);
+      const textEllipsis = text + '…';
+      if (Utils.measureTextWidthPx(text, textEl) <= maxPx) {
+        return textEllipsis;
+      }
+    }
+  
     return text;
   }
 

@@ -1,10 +1,13 @@
-import { Component, ElementRef, HostListener, ViewChild, Input, EventEmitter, Output } from '@angular/core';
+import { Component, ElementRef, HostListener, ViewChild, Input, EventEmitter, Output, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NodeDataModel } from '../model_service_utils/node-data.model';
 import { NodeMenu } from '../node-menu/node-menu';
 import { NodeText } from '../node-text/node-text';
 import { NodeStoreService } from '../model_service_utils/node-store';
 import * as CONST from '../model_service_utils/const';
+import { Utils } from '../model_service_utils/funcUtils';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop'; // Angular 16+
+
 
 @Component({
   selector: 'app-node',
@@ -13,13 +16,13 @@ import * as CONST from '../model_service_utils/const';
   templateUrl: './node.component.html',
   styleUrls: ['./node.component.scss']
 })
-export class Node { 
+export class Node{ 
   @Input() node!: NodeDataModel;
   @Input() scale!: number;
   
   @ViewChild('nodeContainer', { read: ElementRef }) nodeContainer!: ElementRef;
 
-  @ViewChild('titleArea') titleArea!: ElementRef;
+  @ViewChild('titleArea') titleArea!: ElementRef<HTMLElement>;
   @ViewChild('textArea', { read: ElementRef }) textArea!: ElementRef;  // { read: ElementRef } when is an angular component, necessary for certain calls of methods
   @ViewChild('resizinghandle') resizinghandle!: ElementRef;
   @ViewChild('movetreehandle') movetreehandle!: ElementRef;
@@ -37,6 +40,33 @@ export class Node {
   private lastY = 0;
 
   constructor(private nodeStoreService: NodeStoreService) {}
+
+ /* ngOnInit(){
+    this.nodeStoreService.node$(this.node.id)
+          .pipe(takeUntilDestroyed()) // Auto-unsubscribe on destroy
+          .subscribe(updatedNode => {
+            if (updatedNode) {
+              this.node = { ...updatedNode }; // Update local node
+              this.updateNodeMinSize(); // Recalc min size on title change
+            }
+          });
+  }
+
+  ngAfterViewInit() {
+    this.updateNodeMinSize();
+  }
+
+  updateNodeMinSize(){
+    this.nodeStoreService.updateNodeMinSize(
+      this.node.id,
+      this.getHoriFreeWidth(),
+      30);
+  }
+
+  getHoriFreeWidth() :number {
+    if (!this.node || this.node.width<CONST.NODE_PADDING*4||CONST.NODE_PADDING*2+this.node.width<=Utils.measureTextWidthPx(this.node.title,this.titleArea.nativeElement) ){return 0;}
+    return this.node.width + CONST.NODE_PADDING*2 -Utils.measureTextWidthPx(this.node.title,this.titleArea.nativeElement)
+  }*/
 
   newChildNodeClicked() {
     this.hideMenu()
@@ -143,6 +173,8 @@ export class Node {
     this.moving = false;
     window.removeEventListener('mousemove', this.onMouseMove);
     window.removeEventListener('mouseup', this.onMouseUp);
+
+   // this.updateNodeMinSize();
   };
 
   clickIsOnResizingHandle(event: MouseEvent) {

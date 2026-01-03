@@ -62,9 +62,7 @@
                     <li (click)="onMenuAction('MinMaximiseChildrenTree',$event)">{{ node.hiddenTree ? 'Show Child(ren)' : 'Hide Child(ren)'}}</li>
                     <li (click)="onMenuAction('MinMaximiseTitle',$event)">{{ node.titleMinimized ? 'Show Title' : 'Hide Title' }}</li>   
                     <li (click)="onMenuAction('MinMaximiseContent',$event)">{{ node.contentMinimized ? 'Show Content' : 'Hide Content' }}</li>
-                    <li #nodeVisibilityButton 
-                    (click)="onMenuAction('MinMaximiseNode',$event)">
-                    {{ node.nodeMinimized ? 'Expend Node' : 'Minimize Node'}}</li>
+
                     
                 </ul>
             </div>
@@ -82,3 +80,7 @@
 
 
 }
+
+<!-- <li #nodeVisibilityButton 
+(click)="onMenuAction('MinMaximiseNode',$event)">
+{{ node.nodeMinimized ? 'Expend Node' : 'Minimize Node'}}</li>-->
